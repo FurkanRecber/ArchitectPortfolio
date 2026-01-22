@@ -11,7 +11,7 @@ This project is a Full-Stack application developed using industry-standard techn
 ### Backend (.NET Core)
 The server-side is designed with a layered structure based on **Clean Architecture** (Onion Architecture).
 
-* **Framework:** .NET 8 (ASP.NET Core Web API)
+* **Framework:** .NET 9 (ASP.NET Core Web API)
 * **Database:** PostgreSQL (with Entity Framework Core)
 * **ORM:** Entity Framework Core Code-First
 * **Authentication:** JWT (JSON Web Token) Bearer Auth
