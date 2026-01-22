@@ -1,91 +1,100 @@
-using Microsoft.EntityFrameworkCore;
-using ArchiPortfolio.Persistence.Contexts;
-using ArchiPortfolio.Application.Interfaces.Repositories;
-using ArchiPortfolio.Persistence.Repositories;
-using ArchiPortfolio.Application.Mappings;
-using ArchiPortfolio.Application.Interfaces.Services;
-using ArchiPortfolio.Application.Services;
-using ArchiPortfolio.Infrastructure.Services; 
+using ArchiPortfolio.Application;
+using ArchiPortfolio.Persistence;
+using ArchiPortfolio.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. SERVİS KAYITLARI (Dependency Injection) ---
+// 1. KATMAN SERVISLERININ KAYDI (EXTENSION METOTLAR)
+// -------------------------------------------------------------------------
+builder.Services.AddPersistenceServices(builder.Configuration); // DbContext & Repos
+builder.Services.AddInfrastructureServices();                   // PhotoService
+builder.Services.AddApplicationServices();                      // Business Services & Mapper
 
-// Controller Desteği (API'nin çalışması için ŞART)
-builder.Services.AddControllers();
 
-// API Explorer (Swagger'ın endpointleri bulması için)
-builder.Services.AddEndpointsApiExplorer();
-
-// Swagger Jeneratörü
-builder.Services.AddSwaggerGen();
-
-// Veritabanı Bağlantısı
-builder.Services.AddDbContext<ArchiPortfolioDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// AutoMapper
-builder.Services.AddAutoMapper(typeof(GeneralMapping).Assembly);
-
-builder.Services.AddScoped<IPhotoService, LocalPhotoService>();
-
-// 1. Auth Servisini Kaydet
-builder.Services.AddScoped<ISiteSettingService, SiteSettingService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-
-// 2. JWT Ayarları
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
-
-builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
+// 2. JWT AUTHENTICATION AYARLARI (API Katmanında kalması uygundur)
+// -------------------------------------------------------------------------
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"]
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["TokenOptions:Issuer"],
+            ValidAudience = builder.Configuration["TokenOptions:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["TokenOptions:SecurityKey"])),
+            ClockSkew = TimeSpan.Zero
         };
     });
 
-// Repository & Services (Application Katmanı)
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped<IProjectService, ProjectService>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IServiceService, ServiceService>();
-builder.Services.AddScoped<ITeamService, TeamService>();
-builder.Services.AddScoped<ISiteSettingService, SiteSettingService>();
 
-// DİKKAT: IPhotoService (Infrastructure) henüz yazılmadığı için buraya eklemiyoruz.
+// 3. STANDART API AYARLARI
+// -------------------------------------------------------------------------
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+
+// Swagger Ayarları (JWT desteği ile)
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ArchiPortfolio API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    });
+});
+
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        b => b.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin());
+});
 
 var app = builder.Build();
 
-// --- 2. MIDDLEWARE (Uygulama Hattı) ---
-
+// 4. MIDDLEWARE PIPELINE
+// -------------------------------------------------------------------------
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseStaticFiles(); // Resimlerin görüntülenmesi için
+app.UseCors("AllowAll");
 
-// Controller'ları Eşleştir (İstekleri doğru yere yönlendirir)
+app.UseHttpsRedirection();
+
+app.UseAuthentication(); // Önce Auth
+app.UseAuthorization();  // Sonra Yetki
+
 app.MapControllers();
 
 app.Run();

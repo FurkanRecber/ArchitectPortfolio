@@ -23,6 +23,7 @@ namespace ArchiPortfolio.Application.Mappings
             CreateMap<Category, CategoryDto>();
             CreateMap<Service, ServiceDto>();
             CreateMap<TeamMember, TeamMemberDto>();
+            CreateMap<ContactMessage, CreateContactMessageDto>().ReverseMap();
         }
     }
 }
