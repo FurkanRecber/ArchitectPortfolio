@@ -19,20 +19,17 @@ namespace ArchiPortfolio.Application.Services
 
         public async Task<List<ProjectDto>> GetAllProjectsAsync(string langCode)
         {
-            // 1. Veritabanından ham veriyi çek (Kategori ve Resimlerle birlikte)
-            // Not: Repository'de Include yapmak gerekebilir, şimdilik düz çekiyoruz.
-            // İlişkili veriler (Category) null gelirse GenericRepository'e Include ekleyeceğiz.
-            var projects = await _repository.GetAllAsync();
+            // GÜNCELLEME: ProjectImages ve Category tablolarını da Include ettik
+            var projects = await _repository.GetAllAsync(
+                x => x.ProjectImages, 
+                x => x.Category
+            );
 
-            // 2. DTO listesine dönüştür
             var dtos = new List<ProjectDto>();
 
             foreach (var project in projects)
             {
-                // Tek tek map'liyoruz ki dil kontrolü yapabilelim
                 var dto = _mapper.Map<ProjectDto>(project);
-
-                // DİL KONTROLÜ: Eğer Türkçe isteniyorsa, TR alanlarını ana alanlara ata
                 if (langCode == "tr")
                 {
                     dto.Title = !string.IsNullOrEmpty(project.TitleTr) ? project.TitleTr : project.Title;
@@ -42,21 +39,23 @@ namespace ArchiPortfolio.Application.Services
                     dto.Location = !string.IsNullOrEmpty(project.LocationTr) ? project.LocationTr : project.Location;
                     dto.ProjectTeam = !string.IsNullOrEmpty(project.ProjectTeamTr) ? project.ProjectTeamTr : project.ProjectTeam;
                 }
-
                 dtos.Add(dto);
             }
-
             return dtos.OrderByDescending(x => x.PublishDate).ToList();
         }
 
         public async Task<ProjectDto> GetProjectByIdAsync(int id, string langCode)
         {
-            var project = await _repository.GetByIdAsync(id);
+            // GÜNCELLEME: ProjectImages ve Category tablolarını da Include ettik
+            var project = await _repository.GetByIdAsync(id, 
+                x => x.ProjectImages, 
+                x => x.Category
+            );
+            
             if (project == null) return null;
 
             var dto = _mapper.Map<ProjectDto>(project);
 
-            // Dil Kontrolü
             if (langCode == "tr")
             {
                 dto.Title = !string.IsNullOrEmpty(project.TitleTr) ? project.TitleTr : project.Title;
@@ -72,8 +71,12 @@ namespace ArchiPortfolio.Application.Services
 
         public async Task<List<ProjectDto>> GetFeaturedProjectsAsync(string langCode)
         {
-            // Sadece "IsFeatured" olanları getir
-            var projects = await _repository.GetWhereAsync(x => x.IsFeatured == true);
+            // GÜNCELLEME: Şarta ek olarak Include'ları da gönderiyoruz
+            var projects = await _repository.GetWhereAsync(
+                x => x.IsFeatured == true,
+                x => x.ProjectImages,
+                x => x.Category
+            );
             
             var dtos = new List<ProjectDto>();
             foreach (var project in projects)
@@ -83,7 +86,6 @@ namespace ArchiPortfolio.Application.Services
                 {
                     dto.Title = !string.IsNullOrEmpty(project.TitleTr) ? project.TitleTr : project.Title;
                     dto.Description = !string.IsNullOrEmpty(project.DescriptionTr) ? project.DescriptionTr : project.Description;
-                    // Diğer alanlar listede gerekmiyorsa atlamabiliriz
                 }
                 dtos.Add(dto);
             }
@@ -104,6 +106,7 @@ namespace ArchiPortfolio.Application.Services
 
         public async Task DeleteProjectAsync(int id)
         {
+            // Silme işlemi için Include'a gerek yok, ID yetiyor
             var project = await _repository.GetByIdAsync(id);
             if (project != null)
             {

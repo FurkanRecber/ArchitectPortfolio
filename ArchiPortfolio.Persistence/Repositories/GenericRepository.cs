@@ -17,40 +17,42 @@ namespace ArchiPortfolio.Persistence.Repositories
             _dbSet = _context.Set<T>();
         }
 
-        public async Task<List<T>> GetAllAsync()
+        // Tüm veriyi ilişkileriyle getir
+        public async Task<List<T>> GetAllAsync(params Expression<Func<T, object>>[] includes)
         {
-            return await _dbSet.AsNoTracking().ToListAsync(); // AsNoTracking performans artırır (Sadece okuma yaparken)
+            IQueryable<T> query = _dbSet.AsNoTracking();
+            if (includes != null)
+            {
+                query = includes.Aggregate(query, (current, include) => current.Include(include));
+            }
+            return await query.ToListAsync();
         }
 
-        public async Task<T> GetByIdAsync(int id)
+        // ID'ye göre ilişkileriyle getir
+        public async Task<T> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes)
         {
-            return await _dbSet.FindAsync(id);
+            IQueryable<T> query = _dbSet;
+            if (includes != null)
+            {
+                query = includes.Aggregate(query, (current, include) => current.Include(include));
+            }
+            return await query.FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<List<T>> GetWhereAsync(Expression<Func<T, bool>> expression)
+        // Şarta göre ilişkileriyle getir
+        public async Task<List<T>> GetWhereAsync(Expression<Func<T, bool>> expression, params Expression<Func<T, object>>[] includes)
         {
-            return await _dbSet.Where(expression).AsNoTracking().ToListAsync();
+            IQueryable<T> query = _dbSet.Where(expression).AsNoTracking();
+            if (includes != null)
+            {
+                query = includes.Aggregate(query, (current, include) => current.Include(include));
+            }
+            return await query.ToListAsync();
         }
 
-        public async Task AddAsync(T entity)
-        {
-            await _dbSet.AddAsync(entity);
-        }
-
-        public void Update(T entity)
-        {
-            _dbSet.Update(entity);
-        }
-
-        public void Delete(T entity)
-        {
-            _dbSet.Remove(entity);
-            // Veya Soft Delete: entity.IsDeleted = true; _dbSet.Update(entity);
-        }
-        
-        public async Task<int> SaveChangesAsync()
-        {
-            return await _context.SaveChangesAsync();
-        }
+        public async Task AddAsync(T entity) => await _dbSet.AddAsync(entity);
+        public void Update(T entity) => _dbSet.Update(entity);
+        public void Delete(T entity) => _dbSet.Remove(entity);
+        public async Task<int> SaveChangesAsync() => await _context.SaveChangesAsync();
     }
 }

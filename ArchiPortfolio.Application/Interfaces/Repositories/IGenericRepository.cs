@@ -5,19 +5,14 @@ namespace ArchiPortfolio.Application.Interfaces.Repositories
 {
     public interface IGenericRepository<T> where T : BaseEntity
     {
-        // Okuma İşlemleri
-        Task<List<T>> GetAllAsync();
-        Task<T> GetByIdAsync(int id);
-        
-        // Şartlı Sorgu (Örn: Sadece "Featured" projeleri getir)
-        Task<List<T>> GetWhereAsync(Expression<Func<T, bool>> expression);
+        // İlişkili tabloları (includes) dahil ederek getirme özellikleri ekliyoruz
+        Task<List<T>> GetAllAsync(params Expression<Func<T, object>>[] includes);
+        Task<T> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes);
+        Task<List<T>> GetWhereAsync(Expression<Func<T, bool>> expression, params Expression<Func<T, object>>[] includes);
 
-        // Yazma İşlemleri
         Task AddAsync(T entity);
         void Update(T entity);
         void Delete(T entity);
-        
-        // Değişiklikleri Kaydet
         Task<int> SaveChangesAsync();
     }
 }

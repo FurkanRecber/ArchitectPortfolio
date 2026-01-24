@@ -1,30 +1,70 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Download, Grid } from 'lucide-react';
-import { PROJECTS } from '../constants';
 import Footer from '../components/Footer';
+import { projectService } from '../services/projectService';
+import type { Project } from '../types';
 
 const ProjectDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    const project = PROJECTS.find((p) => String(p.id) === id);
-    const nextProjectIndex = PROJECTS.findIndex((p) => String(p.id) === id) + 1;
-    const nextProject = PROJECTS[nextProjectIndex < PROJECTS.length ? nextProjectIndex : 0];
+    // Veri durumlarını yönetmek için State'ler
+    const [project, setProject] = useState<Project | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
+    // Sayfa açıldığında veya ID değiştiğinde çalışır
     useEffect(() => {
-        window.scrollTo(0, 0);
+        const fetchProject = async () => {
+            if (!id) return;
+
+            setLoading(true);
+            try {
+                // Backend'den veriyi çekiyoruz
+                const data = await projectService.getProjectById(id);
+                setProject(data);
+                setError(null);
+            } catch (err) {
+                console.error("Proje yüklenirken hata oluştu:", err);
+                setError("Proje bulunamadı veya yüklenirken hata oluştu.");
+                setProject(null);
+            } finally {
+                setLoading(false);
+            }
+
+            // Sayfa başına kaydır
+            window.scrollTo(0, 0);
+        };
+
+        fetchProject();
     }, [id]);
 
-    if (!project) {
+    // 1. Yükleniyor Durumu
+    if (loading) {
+        return (
+            <div className="h-screen flex flex-col items-center justify-center bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-600 mb-4"></div>
+                <p>Loading project details...</p>
+            </div>
+        );
+    }
+
+    // 2. Hata Durumu
+    if (error || !project) {
         return (
             <div className="h-screen flex flex-col items-center justify-center bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors duration-500">
                 <h2 className="text-3xl font-bold mb-4">Project Not Found</h2>
+                <p className="text-zinc-500 mb-8">{error}</p>
                 <Link to="/work" className="text-accent-600 hover:text-black dark:hover:text-white transition-colors">Back to Projects</Link>
             </div>
         );
     }
+
+    // Sonraki proje için basit bir mantık (Mevcut ID + 1)
+    // Not: Gerçek senaryoda backend'den "NextProjectId" dönmek daha sağlıklıdır.
+    const nextProjectId = parseInt(id || "0") + 1;
 
     return (
         <div className="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white min-h-screen font-sans selection:bg-accent-600 selection:text-white transition-colors duration-500">
@@ -35,6 +75,7 @@ const ProjectDetail: React.FC = () => {
                     initial={{ scale: 1.1 }}
                     animate={{ scale: 1 }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
+                    // Backend'den gelen resim URL'si
                     src={project.imageUrl}
                     alt={project.title}
                     className="w-full h-full object-cover"
@@ -67,7 +108,7 @@ const ProjectDetail: React.FC = () => {
                             transition={{ delay: 0.9, duration: 0.8 }}
                             className="text-zinc-300 text-lg md:text-xl font-light max-w-2xl"
                         >
-                            Reimagining the workplace through transparency and integration with nature.
+                            {project.description}
                         </motion.p>
                     </div>
                 </div>
@@ -82,7 +123,7 @@ const ProjectDetail: React.FC = () => {
                 {/* 2. CONCEPT & METADATA GRID */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-32">
 
-                    {/* LEFT: CONCEPT */}
+                    {/* LEFT: CONCEPT (Details) */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -92,10 +133,8 @@ const ProjectDetail: React.FC = () => {
                     >
                         <h3 className="text-2xl font-bold mb-8 text-zinc-900 dark:text-white">Concept</h3>
                         <div className="text-zinc-600 dark:text-zinc-400 leading-relaxed space-y-6 text-lg font-light transition-colors">
-                            <p>{project.description || "Project description coming soon."}</p>
-                            <p>
-                                The architecture prioritizes sustainability and human well-being, creating spaces that breathe and evolve with their inhabitants. Every detail, from the material selection to the lighting design, is curated to enhance the user experience.
-                            </p>
+                            {/* Backend'den gelen uzun detay metni */}
+                            <p>{project.details || project.description}</p>
                         </div>
 
                         <button className="mt-12 flex items-center gap-3 px-6 py-4 border border-zinc-200 dark:border-white/20 rounded hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-all">
@@ -144,9 +183,10 @@ const ProjectDetail: React.FC = () => {
                 </div>
 
                 {/* 3. GALLERY GRID */}
+                {/* project.gallery artık string[] olduğu için direkt mapleyebiliriz */}
                 {project.gallery && project.gallery.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-32">
-                        {project.gallery.map((img, idx) => (
+                        {project.gallery.map((imgUrl, idx) => (
                             <motion.div
                                 key={idx}
                                 initial={{ opacity: 0, y: 30 }}
@@ -155,14 +195,15 @@ const ProjectDetail: React.FC = () => {
                                 transition={{ duration: 0.6, delay: idx * 0.1 }}
                                 className={`overflow-hidden rounded-lg ${idx === 0 ? 'md:col-span-2 aspect-[2/1]' : 'aspect-square'}`}
                             >
-                                <img src={img} alt={`${project.title} detail ${idx}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                                <img src={imgUrl} alt={`${project.title} detail ${idx}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
                             </motion.div>
                         ))}
                     </div>
                 )}
             </div>
 
-            {/* 4. ARCHITECTURAL PLANS (Darker Section in Dark Mode, Lighter in Light Mode) */}
+            {/* 4. ARCHITECTURAL PLANS */}
+            {/* project.plans Backend'den IsPlan=true olanlar olarak geliyor */}
             <section className="bg-zinc-50 dark:bg-zinc-900 py-32 px-6 md:px-16 border-t border-zinc-200 dark:border-white/5 transition-colors duration-500">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex justify-between items-center mb-16">
@@ -172,7 +213,7 @@ const ProjectDetail: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         {project.plans && project.plans.length > 0 ? (
-                            project.plans.map((plan, idx) => (
+                            project.plans.map((planUrl, idx) => (
                                 <motion.div
                                     key={idx}
                                     initial={{ opacity: 0, scale: 0.95 }}
@@ -182,11 +223,8 @@ const ProjectDetail: React.FC = () => {
                                     className="bg-white dark:bg-zinc-950 p-8 rounded border border-zinc-200 dark:border-white/5 shadow-sm"
                                 >
                                     <span className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-6">Plan View {idx + 1}</span>
-                                    {/* Plans are usually dark lines on white bg. In dark mode we might want to invert them if they are clean. 
-                            If they are photos, inversion looks bad. Assuming they are line drawings or photos of white paper.
-                            Let's keep them natural but handle opacity. */}
                                     <img
-                                        src={plan}
+                                        src={planUrl}
                                         alt="Plan"
                                         className="w-full h-auto opacity-90 hover:opacity-100 transition-opacity dark:invert"
                                     />
@@ -194,7 +232,7 @@ const ProjectDetail: React.FC = () => {
                             ))
                         ) : (
                             <div className="col-span-full text-center py-20 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-white/5 rounded">
-                                <p className="text-zinc-500">Plans available upon request.</p>
+                                <p className="text-zinc-500">No architectural plans available for this project.</p>
                             </div>
                         )}
                     </div>
@@ -203,11 +241,11 @@ const ProjectDetail: React.FC = () => {
 
             {/* 5. NEXT PROJECT FOOTER */}
             <section className="py-32 px-6 md:px-16 text-center bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-white/5 transition-colors duration-500">
-                <span className="text-xs font-bold uppercase tracking-widest text-accent-600 mb-4 block">Next Project</span>
-                <h2 className="text-4xl md:text-6xl font-bold mb-8 text-zinc-900 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors cursor-pointer" onClick={() => navigate(`/work/${nextProject.id}`)}>
-                    {nextProject.title}
+                <span className="text-xs font-bold uppercase tracking-widest text-accent-600 mb-4 block">Continue Exploring</span>
+                <h2 className="text-4xl md:text-6xl font-bold mb-8 text-zinc-900 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors cursor-pointer" onClick={() => navigate(`/work/${nextProjectId}`)}>
+                    Next Project
                 </h2>
-                <button onClick={() => navigate(`/work/${nextProject.id}`)} className="p-4 rounded-full border border-zinc-200 dark:border-white/20 text-zinc-900 dark:text-white hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-all">
+                <button onClick={() => navigate(`/work/${nextProjectId}`)} className="p-4 rounded-full border border-zinc-200 dark:border-white/20 text-zinc-900 dark:text-white hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-all">
                     <ArrowRight size={24} />
                 </button>
             </section>
