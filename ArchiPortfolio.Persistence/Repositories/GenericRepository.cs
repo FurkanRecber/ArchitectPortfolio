@@ -27,6 +27,16 @@ namespace ArchiPortfolio.Persistence.Repositories
             }
             return await query.ToListAsync();
         }
+        
+        public async Task<T> GetAsync(Expression<Func<T, bool>> expression, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+            if (includes != null)
+            {
+                query = includes.Aggregate(query, (current, include) => current.Include(include));
+            }
+            return await query.FirstOrDefaultAsync(expression);
+        }
 
         // ID'ye göre ilişkileriyle getir
         public async Task<T> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes)

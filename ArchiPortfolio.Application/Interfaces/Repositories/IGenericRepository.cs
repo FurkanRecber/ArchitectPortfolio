@@ -7,6 +7,8 @@ namespace ArchiPortfolio.Application.Interfaces.Repositories
     {
         // İlişkili tabloları (includes) dahil ederek getirme özellikleri ekliyoruz
         Task<List<T>> GetAllAsync(params Expression<Func<T, object>>[] includes);
+        
+        Task<T> GetAsync(Expression<Func<T, bool>> expression, params Expression<Func<T, object>>[] includes);
         Task<T> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes);
         Task<List<T>> GetWhereAsync(Expression<Func<T, bool>> expression, params Expression<Func<T, object>>[] includes);
 

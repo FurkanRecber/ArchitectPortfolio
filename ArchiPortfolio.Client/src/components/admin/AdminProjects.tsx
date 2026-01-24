@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Eye, PenLine, Trash2 } from 'lucide-react';
 import { projectService } from '../../services/projectService';
 import type { Project } from '../../types';
+import { getImageUrl } from '../../utils/imageUrlHelper'; // <-- Bunu import et
 
 const AdminProjects: React.FC = () => {
     const navigate = useNavigate();
@@ -75,7 +76,8 @@ const AdminProjects: React.FC = () => {
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-4">
                                         <img
-                                            src={project.imageUrl || 'https://via.placeholder.com/50'}
+                                            src={getImageUrl(project.imageUrl)}
+
                                             alt=""
                                             className="w-10 h-10 rounded-lg object-cover border border-zinc-200 dark:border-white/10"
                                         />

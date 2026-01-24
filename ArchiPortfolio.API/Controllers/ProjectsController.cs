@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using ArchiPortfolio.Application.DTOs;
 using ArchiPortfolio.Application.Interfaces.Services;
 using ArchiPortfolio.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
+using System;
+using System.Threading.Tasks;
 
 namespace ArchiPortfolio.API.Controllers
 {
@@ -12,15 +15,12 @@ namespace ArchiPortfolio.API.Controllers
         private readonly IProjectService _projectService;
         private readonly IPhotoService _photoService;
 
-        // Dependency Injection ile servisleri alıyoruz
         public ProjectsController(IProjectService projectService, IPhotoService photoService)
         {
             _projectService = projectService;
             _photoService = photoService;
         }
 
-        // 1. Tüm Projeleri Getir (Dil destekli)
-        // Örnek: GET api/projects?lang=tr
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetAll([FromQuery] string lang = "en")
@@ -29,8 +29,6 @@ namespace ArchiPortfolio.API.Controllers
             return Ok(result);
         }
 
-        // 2. ID ile Proje Getir
-        // Örnek: GET api/projects/5?lang=tr
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetById(int id, [FromQuery] string lang = "en")
@@ -40,8 +38,6 @@ namespace ArchiPortfolio.API.Controllers
             return Ok(result);
         }
 
-        // 3. Öne Çıkanları Getir (Ana Sayfa İçin)
-        // Örnek: GET api/projects/featured
         [HttpGet("featured")]
         [AllowAnonymous]
         public async Task<IActionResult> GetFeatured([FromQuery] string lang = "en")
@@ -50,47 +46,81 @@ namespace ArchiPortfolio.API.Controllers
             return Ok(result);
         }
 
-        // 4. Yeni Proje Ekle (Resim Yüklemeli)
-        // Swagger'da bu endpoint dosya seçme butonu çıkarır.
-        // [FromForm] sayesinde hem JSON verisi hem de Dosya aynı anda gelir.
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> Add([FromForm] Project project, IFormFile? coverImage)
+        public async Task<IActionResult> Add([FromForm] ProjectCreateDto model)
         {
-            // Eğer resim seçildiyse yükle ve URL'ini al
-            if (coverImage != null)
+            var project = new Project
             {
-                var imageUrl = await _photoService.UploadPhotoAsync(coverImage);
-                project.CoverImageUrl = imageUrl;
+                // --- İNGİLİZCE & ORTAK ALANLAR ---
+                Title = model.Title,
+                Description = model.Description,
+                Details = model.Details,
+                Client = model.Client,
+                Location = model.Location,
+                ProjectTeam = model.ProjectTeam,
+
+                // --- TÜRKÇE ALANLAR ---
+                TitleTr = model.TitleTr,
+                DescriptionTr = model.DescriptionTr,
+                DetailsTr = model.DetailsTr,
+                
+                // DÜZELTME BURADA:
+                // Veritabanı bu alanları zorunlu tuttuğu için, İngilizce (ortak) verileri buraya da kopyalıyoruz.
+                ClientTr = model.Client,         // <-- EKLENDİ
+                LocationTr = model.Location,     // <-- EKLENDİ
+                ProjectTeamTr = model.ProjectTeam, // <-- EKLENDİ
+
+                // --- DİĞER ALANLAR ---
+                ProjectYear = model.ProjectYear,
+                Area = model.Area,
+                Status = model.Status,
+                PressKitUrl = model.PressKitUrl ?? "",
+                IsFeatured = model.IsFeatured,
+                CategoryId = model.CategoryId,
+                
+                Slug = GenerateSlug(model.Title),
+                PublishDate = DateTime.UtcNow, // UTC olması kritik (PostgreSQL için)
+                CoverImageUrl = ""
+            };
+
+            if (model.CoverImage != null)
+            {
+                project.CoverImageUrl = await _photoService.UploadPhotoAsync(model.CoverImage);
             }
 
-            // Projeyi veritabanına kaydet
             await _projectService.AddProjectAsync(project);
             
-            return Ok(new 
-            { 
-                message = "Proje başarıyla oluşturuldu.", 
-                id = project.Id, 
-                imageUrl = project.CoverImageUrl 
-            });
+            return Ok(new { message = "Proje başarıyla oluşturuldu.", id = project.Id });
         }
 
-        // 5. Proje Güncelle
         [HttpPut]
         [Authorize]
-        public async Task<IActionResult> Update([FromBody] Project project)
+        public async Task<IActionResult> Update([FromForm] ProjectCreateDto model)
         {
-            await _projectService.UpdateProjectAsync(project);
-            return Ok(new { message = "Proje güncellendi." });
+            // Update işlemi için de benzer bir mantık gerekecek.
+            return Ok(new { message = "Güncelleme henüz aktif değil." });
         }
 
-        // 6. Proje Sil
         [HttpDelete("{id}")]
         [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
             await _projectService.DeleteProjectAsync(id);
             return Ok(new { message = "Proje silindi." });
+        }
+
+        private string GenerateSlug(string title)
+        {
+            if (string.IsNullOrEmpty(title)) return "";
+            return title.ToLower()
+                .Replace(" ", "-")
+                .Replace("ç", "c")
+                .Replace("ğ", "g")
+                .Replace("ı", "i")
+                .Replace("ö", "o")
+                .Replace("ş", "s")
+                .Replace("ü", "u");
         }
     }
 }

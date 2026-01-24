@@ -34,15 +34,17 @@ namespace ArchiPortfolio.Application.Services
 
         public async Task<User> RegisterAdminAsync(LoginDto loginDto)
         {
-            // Şifreyi tuzla ve hashle
             HashingHelper.CreatePasswordHash(loginDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
             var user = new User
             {
                 Username = loginDto.Username,
+                // Email alanın varsa buraya: Email = loginDto.Username, ekleyebilirsin
                 PasswordHash = passwordHash,
                 PasswordSalt = passwordSalt,
-                Role = "Admin"
+                Role = "Admin",
+                Status = true,
+                CreatedDate = DateTime.UtcNow
             };
 
             await _userRepository.AddAsync(user);
@@ -52,9 +54,9 @@ namespace ArchiPortfolio.Application.Services
 
         public async Task<TokenDto> LoginAsync(LoginDto loginDto)
         {
-            // 1. Kullanıcıyı bul
-            var users = await _userRepository.GetAllAsync();
-            var user = users.FirstOrDefault(u => u.Username == loginDto.Username);
+            // 1. Kullanıcıyı veritabanından direkt sorgulayarak bul (Daha hızlı)
+            // Eğer User tablosunda Email alanı eklediysen: u.Email == loginDto.Username || u.Username == ... yapabilirsin.
+            var user = await _userRepository.GetAsync(u => u.Username == loginDto.Username);
 
             if (user == null) return null; // Kullanıcı yok
 
@@ -68,20 +70,15 @@ namespace ArchiPortfolio.Application.Services
 
         public async Task<TokenDto> RefreshTokenAsync(string token)
         {
-            // Veritabanında bu refresh token var mı?
-            var tokens = await _tokenRepository.GetAllAsync();
-            var storedToken = tokens.FirstOrDefault(t => t.Token == token);
+            var storedToken = await _tokenRepository.GetAsync(t => t.Token == token);
 
-            // Token yoksa, süresi dolmuşsa veya iptal edilmişse hata dön
             if (storedToken == null || !storedToken.IsActive)
                 return null;
 
-            // Eski token'ı iptal et (Revoke)
             storedToken.Revoked = DateTime.UtcNow;
             _tokenRepository.Update(storedToken);
             await _tokenRepository.SaveChangesAsync();
 
-            // Kullanıcıyı bul ve yeni token üret
             var user = await _userRepository.GetByIdAsync(storedToken.UserId);
             return await CreateTokenDtoAsync(user);
         }
@@ -93,7 +90,6 @@ namespace ArchiPortfolio.Application.Services
             var accessToken = CreateAccessToken(user);
             var refreshToken = CreateRefreshToken(user);
 
-            // Refresh Token'ı veritabanına kaydet
             await _tokenRepository.AddAsync(refreshToken);
             await _tokenRepository.SaveChangesAsync();
 
@@ -101,24 +97,26 @@ namespace ArchiPortfolio.Application.Services
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken.Token,
-                Expiration = DateTime.UtcNow.AddMinutes(15) // Access Token ömrü
+                Expiration = DateTime.UtcNow.AddMinutes(60)
             };
         }
 
         private string CreateAccessToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:Key"]);
+            
+            // DÜZELTME BURADA: Encoding.UTF8 yapıldı (Program.cs ile eşleşti)
+            var key = Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"]);
             
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.Name, user.Username),
-                    new Claim(ClaimTypes.Role, user.Role),
+                    new Claim(ClaimTypes.Name, user.Username ?? ""),
+                    new Claim(ClaimTypes.Role, user.Role ?? "User"),
                     new Claim("id", user.Id.ToString())
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(15), // Kısa ömürlü
+                Expires = DateTime.UtcNow.AddMinutes(60), // Token ömrü 1 saat
                 Issuer = _configuration["JwtSettings:Issuer"],
                 Audience = _configuration["JwtSettings:Audience"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -133,7 +131,7 @@ namespace ArchiPortfolio.Application.Services
             return new RefreshToken
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-                Expires = DateTime.UtcNow.AddDays(7), // Uzun ömürlü (7 gün)
+                Expires = DateTime.UtcNow.AddDays(7),
                 Created = DateTime.UtcNow,
                 UserId = user.Id
             };
