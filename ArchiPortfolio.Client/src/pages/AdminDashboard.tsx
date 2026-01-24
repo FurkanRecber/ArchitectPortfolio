@@ -212,7 +212,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                                                                 <tr key={project.id} className="hover:bg-zinc-50 dark:hover:bg-[#1A1D27] transition-colors">
                                                                     <td className="px-6 py-4">
                                                                         <div className="flex items-center gap-4">
-                                                                            <img src={project.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                                                                            <img src={project.coverImageUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
                                                                             <span className="font-medium text-sm text-zinc-900 dark:text-slate-200">{project.title}</span>
                                                                         </div>
                                                                     </td>

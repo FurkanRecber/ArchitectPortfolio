@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, X, Save, Image as ImageIcon, Globe } from 'lucide-react';
 import { projectService } from '../../services/projectService';
 import { categoryService } from '../../services/categoryService';
+import { getImageUrl } from '../../utils/imageUrlHelper'; // Resim yolu düzeltici eklendi
 import type { Category } from '../../types';
 
 const AdminNewProject: React.FC = () => {
@@ -41,18 +42,58 @@ const AdminNewProject: React.FC = () => {
     const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
     const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
+    // Başlangıç Verilerini Yükle
     useEffect(() => {
-        const fetchCategories = async () => {
+        const loadInitialData = async () => {
             try {
+                // 1. Kategorileri Çek
                 const cats = await categoryService.getAllCategories();
                 setCategories(cats);
+
+                // Yeni proje ise varsayılan kategoriyi seç
                 if (cats.length > 0 && !isEditMode) {
                     setFormData(prev => ({ ...prev, categoryId: cats[0].id.toString() }));
                 }
-            } catch (err) { console.error(err); }
+
+                // 2. Edit Moduysa Projeyi Çek
+                if (isEditMode && id) {
+                    const project = await projectService.getProjectById(id);
+
+                    setFormData({
+                        projectYear: project.year || '',
+                        area: project.area || '',
+                        status: project.status || 'Completed',
+                        pressKitUrl: '', // Backend'de varsa buraya project.pressKitUrl ekle
+                        isFeatured: false, // Backend'de varsa buraya project.isFeatured ekle
+                        categoryId: project.category || (cats.length > 0 ? cats[0].id.toString() : ''),
+                        client: project.client || '',
+                        location: project.location || '',
+                        projectTeam: project.team || '',
+
+                        title: project.title || '',
+                        description: project.description || '',
+                        details: project.details || '',
+
+                        // Eğer backend'den gelen nesnede TR alanları varsa buraya eşleştir
+                        // Şimdilik varsayılan boş bırakıyoruz veya İngilizceleri kopyalayabilirsin
+                        titleTr: '',
+                        descriptionTr: '',
+                        detailsTr: ''
+                    });
+
+                    // Kapak resmi varsa önizlemeyi ayarla (Helper kullanarak!)
+                    if (project.coverImageUrl) {
+                        setCoverPreview(getImageUrl(project.coverImageUrl));
+                    }
+                }
+
+            } catch (err) {
+                console.error("Veriler yüklenirken hata:", err);
+            }
         };
-        fetchCategories();
-    }, [isEditMode]);
+
+        loadInitialData();
+    }, [id, isEditMode]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -110,12 +151,15 @@ const AdminNewProject: React.FC = () => {
             if (coverImage) data.append('CoverImage', coverImage);
             galleryFiles.forEach(file => data.append('GalleryImages', file));
 
-            if (isEditMode) {
-                // Update...
+            if (isEditMode && id) {
+                // Update mantığı (henüz backend hazır değilse pas geçebilirsin)
+                // data.append('Id', id);
+                // await projectService.updateProject(data);
+                alert("Güncelleme işlemi henüz backend tarafında tamamlanmadı.");
             } else {
                 await projectService.createProject(data);
+                navigate('/admin/projects');
             }
-            navigate('/admin/projects');
 
         } catch (error) {
             console.error("Hata:", error);

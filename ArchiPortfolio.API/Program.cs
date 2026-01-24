@@ -95,7 +95,7 @@ app.UseStaticFiles(); // Resimlerin görüntülenmesi için
 app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
-
+app.UseStaticFiles();
 app.UseAuthentication(); // Önce Auth
 app.UseAuthorization();  // Sonra Yetki
 

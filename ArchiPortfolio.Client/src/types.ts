@@ -7,7 +7,7 @@ export interface Project {
   description: string; // Kısa açıklama (Listelerde görünür)
   details: string;     // Uzun detay (Detay sayfasında görünür)
 
-  imageUrl: string;    // Kapak resmi
+  coverImageUrl: string;    // Kapak resmi
   category: string;    // Kategori ismi (örn: Residential)
 
   year: string;

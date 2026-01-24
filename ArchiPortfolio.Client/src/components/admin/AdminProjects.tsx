@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Eye, PenLine, Trash2 } from 'lucide-react';
 import { projectService } from '../../services/projectService';
+import { getImageUrl } from '../../utils/imageUrlHelper'; // <-- BU EKLENDİ
 import type { Project } from '../../types';
-import { getImageUrl } from '../../utils/imageUrlHelper'; // <-- Bunu import et
 
 const AdminProjects: React.FC = () => {
     const navigate = useNavigate();
@@ -32,7 +32,7 @@ const AdminProjects: React.FC = () => {
         if (window.confirm('Bu projeyi silmek istediğinize emin misiniz?')) {
             try {
                 await projectService.deleteProject(id);
-                // Listeden de sil (tekrar istek atmaya gerek kalmaz)
+                // Listeden de sil
                 setProjects(projects.filter(p => p.id !== id));
             } catch (error) {
                 alert("Silme işlemi başarısız oldu.");
@@ -75,9 +75,9 @@ const AdminProjects: React.FC = () => {
                             <tr key={project.id} className="hover:bg-zinc-50 dark:hover:bg-[#1A1D27] transition-colors group">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-4">
+                                        {/* DÜZELTME BURADA: getImageUrl ve coverImageUrl kullanıldı */}
                                         <img
-                                            src={getImageUrl(project.imageUrl)}
-
+                                            src={getImageUrl(project.coverImageUrl)}
                                             alt=""
                                             className="w-10 h-10 rounded-lg object-cover border border-zinc-200 dark:border-white/10"
                                         />
