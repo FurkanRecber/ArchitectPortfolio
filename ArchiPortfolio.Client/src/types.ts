@@ -30,3 +30,26 @@ export interface Stat {
   label: string;
   value: string;
 }
+
+export interface Category {
+  id: number;
+  name: string;
+}
+
+export interface ContactMessagePayload {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+export interface LoginRequest {
+  username: string;  // Backend'de Username veya Email kullanıyor olabilirsin, LoginDto'ya bakmak lazım. Genelde Email tercih edilir.
+  password: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  expiration: string;
+  refreshToken: string;
+}

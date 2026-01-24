@@ -1,19 +1,66 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PROJECTS, CATEGORIES } from '../constants';
 import ProjectCard from './ProjectCard';
-// import { ArrowRight } from 'lucide-react';
+import { projectService } from '../services/projectService';
+import { categoryService } from '../services/categoryService';
+import type { Project } from '../types';
 
 const WorkPage: React.FC = () => {
+  // --- STATE TANIMLARI ---
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [categories, setCategories] = useState<string[]>(['All']); // Başlangıçta sadece 'All' var
+  const [loading, setLoading] = useState(true);
 
+  // --- VERİ ÇEKME İŞLEMİ (PROJECTS & CATEGORIES) ---
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Paralel olarak hem projeleri hem kategorileri çekiyoruz (Daha hızlı açılması için)
+        const [projectsData, categoriesData] = await Promise.all([
+          projectService.getAllProjects(),
+          categoryService.getAllCategories()
+        ]);
+
+        // 1. Projeleri State'e at
+        setProjects(projectsData);
+
+        // 2. Kategorileri State'e at (Gelen objelerden sadece isimleri alıyoruz)
+        // Backend'den gelen: [{id:1, name:'Residential'}, ...] -> Bizim istediğimiz: ['All', 'Residential', ...]
+        const categoryNames = ['All', ...categoriesData.map(c => c.name)];
+        setCategories(categoryNames);
+
+      } catch (error) {
+        console.error("Veriler yüklenirken hata oluştu:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // --- FİLTRELEME MANTIĞI ---
   const filteredProjects = useMemo(() => {
-    if (selectedCategory === 'All') return PROJECTS;
-    return PROJECTS.filter((p) => p.category === selectedCategory);
-  }, [selectedCategory]);
+    if (selectedCategory === 'All') return projects;
+    // Backend'den gelen kategori ismi ile seçilen kategori ismini karşılaştırıyoruz
+    return projects.filter((p) => p.category === selectedCategory);
+  }, [selectedCategory, projects]);
 
+  // --- LOADING EKRANI ---
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-32 flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors duration-500">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-accent-600 mb-4"></div>
+        <p className="text-sm uppercase tracking-widest text-zinc-500">Yükleniyor...</p>
+      </div>
+    );
+  }
+
+  // --- ANA GÖRÜNÜM ---
   return (
-    // Padding-top ekledik (pt-32) çünkü Navbar fixed.
     <section className="relative min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white pt-32 pb-20 px-4 md:px-8 lg:px-12 overflow-hidden transition-colors duration-500">
 
       {/* Background Watermark Typography */}
@@ -45,20 +92,20 @@ const WorkPage: React.FC = () => {
             </motion.h1>
           </div>
 
-          {/* Filters */}
+          {/* Filters (Dinamik Kategoriler) */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
             className="flex flex-wrap gap-3 mt-8 lg:mt-0 lg:justify-end"
           >
-            {CATEGORIES.map((category) => (
+            {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
                 className={`px-5 py-2.5 text-xs font-medium uppercase tracking-wider rounded-full transition-all duration-300 border ${selectedCategory === category
-                    ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-white dark:text-black'
-                    : 'bg-transparent text-zinc-500 border-zinc-300 dark:border-zinc-800 hover:border-accent-600 hover:text-accent-600'
+                  ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-white dark:text-black'
+                  : 'bg-transparent text-zinc-500 border-zinc-300 dark:border-zinc-800 hover:border-accent-600 hover:text-accent-600'
                   }`}
               >
                 {category}
@@ -67,7 +114,7 @@ const WorkPage: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Projects Grid - Using CSS Grid for Bento Box feel */}
+        {/* Projects Grid */}
         <motion.div
           layout
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[350px]"
@@ -79,15 +126,15 @@ const WorkPage: React.FC = () => {
           </AnimatePresence>
         </motion.div>
 
-        {/* Empty State */}
+        {/* Empty State (Filtre sonucunda proje yoksa) */}
         {filteredProjects.length === 0 && (
           <div className="flex flex-col items-center justify-center py-32 text-zinc-500">
-            <p className="text-xl font-light">No projects found.</p>
+            <p className="text-xl font-light">Bu kategoride henüz proje bulunmuyor.</p>
             <button
               onClick={() => setSelectedCategory('All')}
               className="mt-4 text-accent-600 hover:text-accent-500 underline decoration-1 underline-offset-4"
             >
-              Clear filters
+              Filtreleri Temizle
             </button>
           </div>
         )}

@@ -64,7 +64,7 @@ const App: React.FC = () => {
           <Route path="/work" element={<Work />} />
           <Route path="/studio" element={<Studio />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/admin" element={<AdminLogin darkMode={darkMode} />} />
+          <Route path="/admin/login" element={<AdminLogin darkMode={darkMode} />} />
           <Route path="/admin/dashboard" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
           <Route path="/admin/projects" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
           <Route path="/admin/projects/new" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />

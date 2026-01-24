@@ -17,6 +17,8 @@ builder.Services.AddApplicationServices();                      // Business Serv
 
 // 2. JWT AUTHENTICATION AYARLARI (API Katmanında kalması uygundur)
 // -------------------------------------------------------------------------
+// 2. JWT AUTHENTICATION AYARLARI
+// -------------------------------------------------------------------------
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -26,13 +28,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["TokenOptions:Issuer"],
-            ValidAudience = builder.Configuration["TokenOptions:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["TokenOptions:SecurityKey"])),
+            
+            // AppSettings.json'daki "JwtSettings" başlığına göre güncelledik:
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"])),
+            
             ClockSkew = TimeSpan.Zero
         };
     });
-
 
 // 3. STANDART API AYARLARI
 // -------------------------------------------------------------------------
@@ -96,5 +100,19 @@ app.UseAuthentication(); // Önce Auth
 app.UseAuthorization();  // Sonra Yetki
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        // Yazdığımız SeedData sınıfını çalıştır
+        await ArchiPortfolio.Persistence.SeedData.InitializeAsync(scope.ServiceProvider);
+        Console.WriteLine("--> Veritabanı güncellendi ve Admin bilgileri kontrol edildi.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"--> Veritabanı Seed Hatası: {ex.Message}");
+    }
+}
 
 app.Run();

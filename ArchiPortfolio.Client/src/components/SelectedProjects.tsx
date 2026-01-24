@@ -1,33 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { PROJECTS } from '../constants';
+// Backend servisini import ettik
+import { projectService } from '../services/projectService';
+import type { Project } from '../types';
 
 const SelectedProjects: React.FC = () => {
-  // Select specific projects to display on Home
-  // Example: "The Glass House" (id: 2), "Vertex Tower" (id: 1), "Nordic Museum" (id: 3)
-  // Or just pick the first 3 for simplicity, but let's try to match the previous visual if possible.
-  // Previous local data had: 
-  // 1. "The Glass House" (Residential) -> ID 2 in constants
-  // 2. "Skyline Loft" (Commercial) -> Let's map to "Vertex Tower" (ID 1) or "Azure Loft" (ID 9)
-  // 3. "Detail & Texture" -> Maybe "Nordic Museum" (ID 3)
+  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
 
-  // Let's pick ID 2, 1, and 3 to keep it populated with real data.
-  const featuredProject = PROJECTS.find(p => p.id === '2') || PROJECTS[0];
-  const sideProjects = [
-    PROJECTS.find(p => p.id === '1'),
-    PROJECTS.find(p => p.id === '3')
-  ].filter(Boolean) as typeof PROJECTS;
+  // Veriyi çekiyoruz
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        const data = await projectService.getFeaturedProjects();
+        setFeaturedProjects(data);
+      } catch (err) {
+        console.error("Öne çıkan projeler yüklenemedi", err);
+      }
+    };
+    fetchFeatured();
+  }, []);
+
+  // Eğer veri henüz gelmediyse veya boşsa bu bölümü hiç gösterme
+  if (featuredProjects.length === 0) return null;
+
+  // İlk projeyi büyük, sonraki ikisini yan tarafa al
+  const featuredProject = featuredProjects[0];
+  const sideProjects = featuredProjects.slice(1, 3);
 
   return (
-    // Resimdeki ana arka plan: zinc-950 (#101822)
     <section id="selected-projects" className="py-24 px-6 md:px-16 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors duration-500">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-12">
           <div>
             <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-4">Selected Works</h2>
-            {/* Mavi Çizgi */}
             <div className="h-1 w-20 bg-accent-600 rounded-full"></div>
           </div>
           <Link to="/work" className="hidden md:flex items-center gap-2 text-xs font-bold tracking-widest uppercase hover:text-accent-600 transition-colors">
@@ -36,7 +43,7 @@ const SelectedProjects: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-auto md:h-[800px]">
-          {/* Sol Büyük Kart */}
+          {/* Sol Büyük Kart (İlk Proje) */}
           <Link to={`/work/${featuredProject.id}`} className="block relative group overflow-hidden rounded-lg w-full h-[500px] md:h-full cursor-pointer">
             <motion.div
               className="w-full h-full"
@@ -56,7 +63,7 @@ const SelectedProjects: React.FC = () => {
             </motion.div>
           </Link>
 
-          {/* Sağ Sütun */}
+          {/* Sağ Sütun (Diğer 2 Proje) */}
           <div className="flex flex-col gap-6 h-full">
             {sideProjects.map((project, idx) => (
               <Link key={project.id} to={`/work/${project.id}`} className="block flex-1 relative group overflow-hidden rounded-lg cursor-pointer">
