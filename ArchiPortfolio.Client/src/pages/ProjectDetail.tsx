@@ -76,7 +76,7 @@ const ProjectDetail: React.FC = () => {
                     animate={{ scale: 1 }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
                     // Backend'den gelen resim URL'si
-                    src={project.imageUrl}
+                    src={project.coverImageUrl}
                     alt={project.title}
                     className="w-full h-full object-cover"
                 />

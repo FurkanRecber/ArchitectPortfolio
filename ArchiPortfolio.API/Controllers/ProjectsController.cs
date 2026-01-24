@@ -5,6 +5,7 @@ using ArchiPortfolio.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Threading.Tasks;
+using System.Collections.Generic; // List<> için gerekli
 
 namespace ArchiPortfolio.API.Controllers
 {
@@ -65,11 +66,10 @@ namespace ArchiPortfolio.API.Controllers
                 DescriptionTr = model.DescriptionTr,
                 DetailsTr = model.DetailsTr,
                 
-                // DÜZELTME BURADA:
-                // Veritabanı bu alanları zorunlu tuttuğu için, İngilizce (ortak) verileri buraya da kopyalıyoruz.
-                ClientTr = model.Client,         // <-- EKLENDİ
-                LocationTr = model.Location,     // <-- EKLENDİ
-                ProjectTeamTr = model.ProjectTeam, // <-- EKLENDİ
+                // Veritabanı zorunlu tuttuğu için kopyalıyoruz
+                ClientTr = model.Client,         
+                LocationTr = model.Location,     
+                ProjectTeamTr = model.ProjectTeam, 
 
                 // --- DİĞER ALANLAR ---
                 ProjectYear = model.ProjectYear,
@@ -80,13 +80,33 @@ namespace ArchiPortfolio.API.Controllers
                 CategoryId = model.CategoryId,
                 
                 Slug = GenerateSlug(model.Title),
-                PublishDate = DateTime.UtcNow, // UTC olması kritik (PostgreSQL için)
+                PublishDate = DateTime.UtcNow, 
                 CoverImageUrl = ""
             };
 
+            // 1. Kapak Resmi Yükleme
             if (model.CoverImage != null)
             {
                 project.CoverImageUrl = await _photoService.UploadPhotoAsync(model.CoverImage);
+            }
+
+            // 2. Galeri Resimlerini Yükleme (BU KISIM EKLENDİ)
+            if (model.GalleryImages != null && model.GalleryImages.Count > 0)
+            {
+                project.ProjectImages = new List<ProjectImage>();
+
+                foreach (var file in model.GalleryImages)
+                {
+                    // Her dosyayı yükle
+                    var galleryUrl = await _photoService.UploadPhotoAsync(file);
+                    
+                    // Listeye ekle
+                    project.ProjectImages.Add(new ProjectImage 
+                    { 
+                        ImageUrl = galleryUrl, 
+                        IsPlan = false 
+                    });
+                }
             }
 
             await _projectService.AddProjectAsync(project);
@@ -98,7 +118,7 @@ namespace ArchiPortfolio.API.Controllers
         [Authorize]
         public async Task<IActionResult> Update([FromForm] ProjectCreateDto model)
         {
-            // Update işlemi için de benzer bir mantık gerekecek.
+            // Update işlemi henüz aktif değil
             return Ok(new { message = "Güncelleme henüz aktif değil." });
         }
 
