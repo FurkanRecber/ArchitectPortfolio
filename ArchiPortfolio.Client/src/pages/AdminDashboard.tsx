@@ -114,6 +114,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
         setActiveTab(tab);
     };
 
+    const handleDelete = async (id: number) => {
+        if (window.confirm('Are you sure you want to delete this project?')) {
+            try {
+                await projectService.deleteProject(id);
+                // Listeyi güncelle
+                setDashboardProjects(prev => prev.filter(p => p.id !== id));
+            } catch (error) {
+                console.error("Proje silinirken hata:", error);
+                alert("Failed to delete project.");
+            }
+        }
+    };
+
     // İstatistik Kartları Verisi
     const stats = [
         { title: 'Total Projects', value: dashboardProjects.length.toString(), change: 'Live', changeText: 'on website', changeColor: 'text-green-500', icon: FolderOpen, iconColor: 'text-blue-500' },
@@ -225,6 +238,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                                                         <tbody className="divide-y divide-zinc-200 dark:divide-[#1F2430]">
                                                             {dashboardProjects.map((project) => (
                                                                 <tr key={project.id} className="hover:bg-zinc-50 dark:hover:bg-[#1A1D27] transition-colors group">
+
+                                                                    {/* 1. PROJE ADI */}
                                                                     <td className="px-6 py-4">
                                                                         <div className="flex items-center gap-4">
                                                                             <img src={getImageUrl(project.coverImageUrl)} alt="" className="w-12 h-10 rounded-lg object-cover shadow-sm border border-zinc-100 dark:border-white/5" />
@@ -234,27 +249,45 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                                                                             </div>
                                                                         </div>
                                                                     </td>
+
+                                                                    {/* 2. KATEGORİ (Backend'den gelen CategoryName) */}
                                                                     <td className="px-6 py-4 text-sm text-zinc-600 dark:text-slate-400 font-medium">
-                                                                        {project.category}
+                                                                        {/* DTO'da 'category' olarak geliyor */}
+                                                                        {project.category || '-'}
                                                                     </td>
+
+                                                                    {/* 3. TARİH (Yıl bilgisi) */}
                                                                     <td className="px-6 py-4 text-sm text-zinc-500 dark:text-slate-500">
-                                                                        {project.createdDate ? new Date(project.createdDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Oct 24, 2023'}
+                                                                        {/* DTO'da 'year' olarak geliyor */}
+                                                                        {project.year || '2024'}
                                                                     </td>
+
+                                                                    {/* 4. DURUM (DİNAMİK HALE GETİRİLDİ) */}
                                                                     <td className="px-6 py-4">
-                                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Draft' ? 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' : 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400'}`}>
-                                                                            <span className={`w-1.5 h-1.5 rounded-full ${project.status === 'Draft' ? 'bg-zinc-400' : 'bg-green-500'}`}></span>
-                                                                            {project.status === 'Draft' ? 'Draft' : 'Published'}
+                                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${project.status === 'Completed' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20' :
+                                                                            project.status === 'In Progress' ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20' :
+                                                                                project.status === 'Concept' ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20' :
+                                                                                    'bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700'
+                                                                            }`}>
+                                                                            <span className={`w-1.5 h-1.5 rounded-full ${project.status === 'Completed' ? 'bg-green-500' :
+                                                                                project.status === 'In Progress' ? 'bg-blue-500' :
+                                                                                    project.status === 'Concept' ? 'bg-purple-500' :
+                                                                                        'bg-zinc-400'
+                                                                                }`}></span>
+                                                                            {project.status || 'Unknown'}
                                                                         </span>
                                                                     </td>
+
+                                                                    {/* 5. AKSİYONLAR */}
                                                                     <td className="px-6 py-4 text-right">
                                                                         <div className="flex items-center justify-end gap-2 text-zinc-400">
-                                                                            <button className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-lg hover:text-indigo-600 transition-colors" title="View">
+                                                                            <button onClick={() => navigate(`/work/${project.id}`)} className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-lg hover:text-indigo-600 transition-colors" title="View">
                                                                                 <Eye size={16} />
                                                                             </button>
                                                                             <button onClick={() => navigate(`/admin/projects/edit/${project.id}`)} className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-lg hover:text-blue-600 transition-colors" title="Edit">
                                                                                 <PenLine size={16} />
                                                                             </button>
-                                                                            <button className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-lg hover:text-red-600 transition-colors" title="Delete">
+                                                                            <button onClick={() => handleDelete(project.id)} className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-lg hover:text-red-600 transition-colors" title="Delete">
                                                                                 <Trash2 size={16} />
                                                                             </button>
                                                                         </div>

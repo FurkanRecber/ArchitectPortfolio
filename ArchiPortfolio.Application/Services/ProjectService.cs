@@ -10,11 +10,13 @@ namespace ArchiPortfolio.Application.Services
     {
         private readonly IGenericRepository<Project> _repository;
         private readonly IMapper _mapper;
+        private readonly IPhotoService _photoService;
 
-        public ProjectService(IGenericRepository<Project> repository, IMapper mapper)
+        public ProjectService(IGenericRepository<Project> repository, IMapper mapper, IPhotoService photoService)
         {
             _repository = repository;
             _mapper = mapper;
+            _photoService = photoService;
         }
 
         public async Task<List<ProjectDto>> GetAllProjectsAsync(string langCode)
@@ -102,11 +104,78 @@ namespace ArchiPortfolio.Application.Services
             await _repository.SaveChangesAsync();
         }
 
-        public async Task UpdateProjectAsync(Project project)
+        public async Task UpdateProjectAsync(ProjectUpdateDto dto)
+{
+    // 1. Mevcut projeyi (Resimleriyle birlikte) çek
+    var project = await _repository.GetByIdAsync(dto.Id, x => x.ProjectImages);
+    
+    if (project == null) throw new Exception("Proje bulunamadı.");
+
+    // 2. Metin Alanlarını Güncelle (AutoMapper kullanabilirsin veya elle)
+    // _mapper.Map(dto, project); // AutoMapper kullanırsan CoverImage'i ezmemesine dikkat et
+    
+    // Elle güncellemek daha güvenli olabilir:
+    project.Title = dto.Title;
+    project.Description = dto.Description;
+    project.Details = dto.Details;
+    project.Client = dto.Client;
+    project.Location = dto.Location;
+    project.ProjectTeam = dto.ProjectTeam;
+    project.ProjectYear = dto.ProjectYear;
+    project.Area = dto.Area;
+    project.Status = dto.Status;
+    project.CategoryId = dto.CategoryId;
+    project.IsFeatured = dto.IsFeatured;
+    
+    // TR Alanlar
+    project.TitleTr = dto.TitleTr;
+    project.DescriptionTr = dto.DescriptionTr;
+    project.DetailsTr = dto.DetailsTr;
+    // ... diğer TR alanlar ...
+
+    // 3. KAPAK RESMİ GÜNCELLEME
+    if (dto.CoverImage != null)
+    {
+        // Eski resmi sil (İsteğe bağlı, çöp birikmesin diye önerilir)
+        if (!string.IsNullOrEmpty(project.CoverImageUrl))
         {
-            _repository.Update(project);
-            await _repository.SaveChangesAsync();
+            _photoService.DeletePhoto(project.CoverImageUrl);
         }
+        // Yeni resmi yükle
+        project.CoverImageUrl = await _photoService.UploadPhotoAsync(dto.CoverImage);
+    }
+
+    // 4. YENİ GALERİ RESİMLERİ EKLEME
+    if (dto.GalleryImages != null && dto.GalleryImages.Count > 0)
+    {
+        foreach (var file in dto.GalleryImages)
+        {
+            var url = await _photoService.UploadPhotoAsync(file);
+            project.ProjectImages.Add(new ProjectImage 
+            { 
+                ImageUrl = url, 
+                IsPlan = false // Plan mı normal mi ayrımı frontend'den gelmeli ama şimdilik false
+            });
+        }
+    }
+
+    // 5. SİLİNMEK İSTENEN GALERİ RESİMLERİ
+    if (dto.DeletedGalleryImages != null && dto.DeletedGalleryImages.Count > 0)
+    {
+        foreach (var url in dto.DeletedGalleryImages)
+        {
+            var imgToDelete = project.ProjectImages.FirstOrDefault(x => x.ImageUrl == url);
+            if (imgToDelete != null)
+            {
+                _photoService.DeletePhoto(imgToDelete.ImageUrl); // Fiziksel sil
+                project.ProjectImages.Remove(imgToDelete); // Veritabanından sil
+            }
+        }
+    }
+
+    _repository.Update(project);
+    await _repository.SaveChangesAsync();
+}
 
         public async Task DeleteProjectAsync(int id)
         {

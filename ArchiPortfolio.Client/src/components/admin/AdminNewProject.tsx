@@ -65,8 +65,8 @@ const AdminNewProject: React.FC = () => {
                         area: project.area || '',
                         status: project.status || 'Completed',
 
-                        isFeatured: false, // Backend'de varsa buraya project.isFeatured ekle
-                        categoryId: project.category || (cats.length > 0 ? cats[0].id.toString() : ''),
+                        isFeatured: project.isFeatured || (project as any).IsFeatured || false,
+                        categoryId: (project.categoryId ? project.categoryId.toString() : null) || cats.find(c => c.name === project.category)?.id.toString() || (cats.length > 0 ? cats[0].id.toString() : ''),
                         client: project.client || '',
                         location: project.location || '',
                         projectTeam: project.team || '',
@@ -75,10 +75,10 @@ const AdminNewProject: React.FC = () => {
                         description: project.description || '',
                         details: project.details || '',
 
-                        // Eğer backend'den gelen nesnede TR alanları varsa buraya eşleştir
-                        titleTr: '',
-                        descriptionTr: '',
-                        detailsTr: ''
+                        // TR Alanlarını Eşleştir
+                        titleTr: project.titleTr || '',
+                        descriptionTr: project.descriptionTr || '',
+                        detailsTr: project.detailsTr || ''
                     });
 
                     // Kapak resmi
@@ -168,10 +168,14 @@ const AdminNewProject: React.FC = () => {
             // Şimdilik sadece yeni eklenenleri yolluyoruz.
 
             if (isEditMode && id) {
-                // Update mantığı (henüz backend hazır değilse pas geçebilirsin)
-                // data.append('Id', id);
-                // await projectService.updateProject(data);
-                alert("Güncelleme işlemi henüz backend tarafında tamamlanmadı.");
+                // ID'yi ekle
+                data.append('Id', id);
+
+                // Silinen resimler varsa onları da gönder (Bunu backendde karşılayacak yapı kurduysan)
+                // Şimdilik sadece güncelleme diyelim:
+                await projectService.updateProject(data);
+                alert("Proje başarıyla güncellendi! 🚀");
+                navigate('/admin/projects');
             } else {
                 await projectService.createProject(data);
                 navigate('/admin/projects');

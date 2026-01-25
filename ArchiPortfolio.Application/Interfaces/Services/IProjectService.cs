@@ -14,7 +14,7 @@ namespace ArchiPortfolio.Application.Interfaces.Services
 
         // Yazma İşlemleri (Admin paneli için - Burada dile gerek yok, ham veriyi kaydediyoruz)
         Task AddProjectAsync(Project project);
-        Task UpdateProjectAsync(Project project);
+        Task UpdateProjectAsync(ProjectUpdateDto updateDto);
         Task DeleteProjectAsync(int id);
     }
 }

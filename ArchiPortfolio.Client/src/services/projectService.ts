@@ -35,9 +35,11 @@ export const projectService = {
     },
 
     // 2. Proje Güncelle
-    updateProject: async (formData: FormData): Promise<void> => {
-        await axios.put(API_URL, formData, {
+    updateProject: async (projectData: FormData): Promise<void> => {
+        // ID, FormData'nın içinde olmalı. PUT isteği yapıyoruz.
+        await axios.put(API_URL, projectData, {
             headers: {
+                'Content-Type': 'multipart/form-data',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
         });

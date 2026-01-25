@@ -7,6 +7,13 @@ export interface Project {
   description: string; // Kısa açıklama (Listelerde görünür)
   details: string;     // Uzun detay (Detay sayfasında görünür)
 
+  // Türkçe Alanlar & Featured
+  titleTr?: string;
+  descriptionTr?: string;
+  detailsTr?: string;
+  isFeatured?: boolean;
+  categoryId?: number;
+
   coverImageUrl: string;    // Kapak resmi
   category: string;    // Kategori ismi (örn: Residential)
 
@@ -66,24 +73,77 @@ export interface AuthResponse {
 export interface SiteSetting {
   id: number;
 
-  // İngilizce
+  // General & Brand
+  siteTitle?: string;
+  logoUrl?: string; // Logo
+  copyrightText?: string;
+  copyrightTextTr?: string;
+  footerDescription?: string;
+  footerDescriptionTr?: string;
+
+  // Hero Section
   heroTitle: string;
-  aboutTitle: string;
-  aboutText: string;
-  address: string;
-
-  // Türkçe
   heroTitleTr: string;
-  aboutTitleTr: string;
-  aboutTextTr: string;
-  addressTr: string;
+  heroSubtitle?: string;
+  heroSubtitleTr?: string;
+  heroButtonText?: string;
+  heroButtonTextTr?: string;
+  heroImageUrl?: string;
 
-  // İletişim & Sosyal
+  // CTA Section
+  ctaTitle?: string;
+  ctaTitleTr?: string;
+  ctaDescription?: string;
+  ctaDescriptionTr?: string;
+  ctaButtonText?: string;
+  ctaButtonTextTr?: string;
+
+  // About & Studio (Updated)
+  aboutTitle: string;
+  aboutTitleTr: string;
+  aboutDescription?: string; // Was aboutText
+  aboutDescriptionTr?: string;
+  aboutImageUrl?: string;
+
+  // Philosophy
+  philosophyTitle?: string;
+  philosophyTitleTr?: string;
+  philosophyDescription?: string;
+  philosophyDescriptionTr?: string;
+
+  // Metrics (Flexible)
+  metric1Title?: string;
+  metric1TitleTr?: string;
+  metric1Value?: string;
+
+  metric2Title?: string;
+  metric2TitleTr?: string;
+  metric2Value?: string;
+
+  metric3Title?: string;
+  metric3TitleTr?: string;
+  metric3Value?: string;
+
+  // Showreel
+  showreelUrl?: string;
+
+  // Contact & Social
   email: string;
   phone: string;
+  address: string;
+  addressTr: string;
   googleMapEmbedCode: string;
+
   facebookUrl: string;
   instagramUrl: string;
   linkedinUrl: string;
   youtubeUrl: string;
+
+  // SEO
+  googleAnalyticsId?: string;
+  googleTagManagerId?: string;
+  headScripts?: string;
+  metaKeywords?: string;
+  metaKeywordsTr?: string;
+  robotsTxt?: string;
 }

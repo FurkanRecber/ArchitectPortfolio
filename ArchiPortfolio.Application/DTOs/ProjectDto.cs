@@ -18,7 +18,17 @@ namespace ArchiPortfolio.Application.DTOs
 
         public string Details { get; set; }
 
-        // DÜZELTME: Frontend 'coverImageUrl' bekliyor, 'imageUrl' değil!
+        [JsonPropertyName("titleTr")]
+        public string TitleTr { get; set; }
+
+        [JsonPropertyName("descriptionTr")]
+        public string DescriptionTr { get; set; }
+
+        [JsonPropertyName("detailsTr")]
+        public string DetailsTr { get; set; }
+
+        [JsonPropertyName("isFeatured")]
+        public bool IsFeatured { get; set; }
         [JsonPropertyName("coverImageUrl")] 
         public string CoverImageUrl { get; set; }
         

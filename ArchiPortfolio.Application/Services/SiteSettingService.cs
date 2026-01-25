@@ -91,6 +91,20 @@ namespace ArchiPortfolio.Application.Services
             {
                 setting.HeroImageUrl = await _photoService.UploadPhotoAsync(dto.HeroImage);
             }
+            if (dto.AboutImage != null)
+            {
+                if (!string.IsNullOrEmpty(setting.AboutImageUrl)) _photoService.DeletePhoto(setting.AboutImageUrl);
+                setting.AboutImageUrl = await _photoService.UploadPhotoAsync(dto.AboutImage);
+            }
+            
+            if (dto.PhilosophyIcon != null)
+            {
+                if (!string.IsNullOrEmpty(setting.PhilosophyIconUrl))
+                {
+                    _photoService.DeletePhoto(setting.PhilosophyIconUrl);
+                }
+                setting.PhilosophyIconUrl = await _photoService.UploadPhotoAsync(dto.PhilosophyIcon);
+            }
 
             _repository.Update(setting);
             await _repository.SaveChangesAsync();

@@ -114,11 +114,11 @@ namespace ArchiPortfolio.API.Controllers
         }
 
         [HttpPut]
-        [Authorize]
-        public async Task<IActionResult> Update([FromForm] ProjectCreateDto model)
+        [Authorize] 
+        public async Task<IActionResult> Update([FromForm] ProjectUpdateDto updateDto)
         {
-            // Update işlemi henüz aktif değil
-            return Ok(new { message = "Güncelleme henüz aktif değil." });
+            await _projectService.UpdateProjectAsync(updateDto);
+            return Ok(new { message = "Proje başarıyla güncellendi." });
         }
 
         [HttpDelete("{id}")]

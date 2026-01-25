@@ -4,24 +4,25 @@ namespace ArchiPortfolio.Application.DTOs
     {
         public int Id { get; set; }
 
-        // General
+        // --- 1. GENERAL & BRAND ---
+        // DİKKAT: Burada IFormFile YOK, string URL VAR.
+        public string LogoUrl { get; set; } 
         public string SiteTitle { get; set; }
-        public string LogoUrl { get; set; }
         public string CopyrightText { get; set; }
         public string CopyrightTextTr { get; set; }
         public string FooterDescription { get; set; }
         public string FooterDescriptionTr { get; set; }
-
-        // Hero
+        
+        // --- 2. HERO SECTION ---
+        public string HeroImageUrl { get; set; } // URL
         public string HeroTitle { get; set; }
         public string HeroTitleTr { get; set; }
         public string HeroSubtitle { get; set; }
         public string HeroSubtitleTr { get; set; }
         public string HeroButtonText { get; set; }
         public string HeroButtonTextTr { get; set; }
-        public string HeroImageUrl { get; set; }
 
-        // CTA
+        // --- 3. CTA SECTION ---
         public string CtaTitle { get; set; }
         public string CtaTitleTr { get; set; }
         public string CtaDescription { get; set; }
@@ -29,29 +30,58 @@ namespace ArchiPortfolio.Application.DTOs
         public string CtaButtonText { get; set; }
         public string CtaButtonTextTr { get; set; }
 
-        // Studio
-        public string YearsActive { get; set; }
-        public string ProjectsCompleted { get; set; }
-        public string AwardsWon { get; set; }
-        public string ShowreelUrl { get; set; }
+        // --- 4. STUDIO SECTION ---
+        
+        // A. Metrikler
+        public string Metric1Title { get; set; }
+        public string Metric1TitleTr { get; set; }
+        public string Metric1Value { get; set; }
 
-        // Contact
+        public string Metric2Title { get; set; }
+        public string Metric2TitleTr { get; set; }
+        public string Metric2Value { get; set; }
+
+        public string Metric3Title { get; set; }
+        public string Metric3TitleTr { get; set; }
+        public string Metric3Value { get; set; }
+
+        // B. Hakkımızda (About Us)
+        public string AboutTitle { get; set; }
+        public string AboutTitleTr { get; set; }
+        public string AboutDescription { get; set; }
+        public string AboutDescriptionTr { get; set; }
+        public string AboutImageUrl { get; set; } // URL
+
+        // C. Felsefe (Philosophy)
+        public string PhilosophyTitle { get; set; }
+        public string PhilosophyTitleTr { get; set; }
+        public string PhilosophyDescription { get; set; }
+        public string PhilosophyDescriptionTr { get; set; }
+        public string PhilosophyIconUrl { get; set; } // URL
+
+        // D. Video
+        public string ShowreelUrl { get; set; }
+        public int WebSiteVisitorCount { get; set; }
+
+        // --- 5. CONTACT INFO ---
         public string Email { get; set; }
         public string Phone { get; set; }
         public string Address { get; set; }
         public string AddressTr { get; set; }
         public string GoogleMapEmbedCode { get; set; }
+
+        // Sosyal Medya
         public string FacebookUrl { get; set; }
         public string InstagramUrl { get; set; }
         public string LinkedinUrl { get; set; }
         public string YoutubeUrl { get; set; }
 
-        // SEO
+        // --- 6. SEO & ANALYTICS ---
         public string GoogleAnalyticsId { get; set; }
         public string GoogleTagManagerId { get; set; }
-        public string HeadScripts { get; set; }
         public string MetaKeywords { get; set; }
         public string MetaKeywordsTr { get; set; }
+        public string HeadScripts { get; set; }
         public string RobotsTxt { get; set; }
     }
 }

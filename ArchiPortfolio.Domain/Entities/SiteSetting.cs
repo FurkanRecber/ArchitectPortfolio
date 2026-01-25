@@ -37,9 +37,31 @@ namespace ArchiPortfolio.Domain.Entities
         public string CtaButtonTextTr { get; set; }
 
         // --- 4. STUDIO METRICS --- (CV Kaldırıldı)
-        public string YearsActive { get; set; }
-        public string ProjectsCompleted { get; set; }
-        public string AwardsWon { get; set; }
+        public string Metric1Title { get; set; } // Örn: "Years Active"
+        public string Metric1TitleTr { get; set; }
+        public string Metric1Value { get; set; } // Örn: "12"
+
+        public string Metric2Title { get; set; } // Örn: "Projects"
+        public string Metric2TitleTr { get; set; }
+        public string Metric2Value { get; set; } // Örn: "140+"
+
+        public string Metric3Title { get; set; } // Örn: "Awards"
+        public string Metric3TitleTr { get; set; }
+        public string Metric3Value { get; set; } // Örn: "25"
+        
+        public string AboutTitle { get; set; }
+        public string AboutTitleTr { get; set; }
+        public string AboutDescription { get; set; }
+        public string AboutDescriptionTr { get; set; }
+        public string PhilosophyIconUrl { get; set; }
+        public string AboutImageUrl { get; set; } // Yanındaki Resim
+        
+        public string PhilosophyTitle { get; set; }
+        public string PhilosophyTitleTr { get; set; }
+        public string PhilosophyDescription { get; set; }
+        public string PhilosophyDescriptionTr { get; set; }
+        
+        // Showreel videosu kalsın
         public string ShowreelUrl { get; set; }
 
         // --- 5. CONTACT ---

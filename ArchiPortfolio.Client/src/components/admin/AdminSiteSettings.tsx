@@ -15,6 +15,7 @@ const AdminSiteSettings: React.FC = () => {
     // Dosya Referansları
     const logoInputRef = useRef<HTMLInputElement>(null);
     const heroInputRef = useRef<HTMLInputElement>(null);
+    const aboutInputRef = useRef<HTMLInputElement>(null);
 
     // State: Backend'deki güncel yapı (CV ve Behance yok, SEO var)
     const [settings, setSettings] = useState<any>({
@@ -25,8 +26,16 @@ const AdminSiteSettings: React.FC = () => {
         heroTitle: '', heroTitleTr: '', heroSubtitle: '', heroSubtitleTr: '', heroButtonText: '', heroButtonTextTr: '', heroImageUrl: '',
         // CTA
         ctaTitle: '', ctaTitleTr: '', ctaDescription: '', ctaDescriptionTr: '', ctaButtonText: '', ctaButtonTextTr: '',
-        // Studio (CV yok)
-        yearsActive: '', projectsCompleted: '', awardsWon: '', showreelUrl: '',
+        // Studio -> About & Metrics & Philosophy
+        aboutTitle: '', aboutTitleTr: '', aboutDescription: '', aboutDescriptionTr: '', aboutImageUrl: '',
+        philosophyTitle: '', philosophyTitleTr: '', philosophyDescription: '', philosophyDescriptionTr: '',
+
+        yearsActive: '', projectsCompleted: '', projectsCompletedTr: '', awardsWon: '', showreelUrl: '',
+
+        metric1Title: '', metric1TitleTr: '', metric1Value: '',
+        metric2Title: '', metric2TitleTr: '', metric2Value: '',
+        metric3Title: '', metric3TitleTr: '', metric3Value: '',
+
         // Contact (Behance yok)
         email: '', phone: '', address: '', addressTr: '', googleMapEmbedCode: '',
         facebookUrl: '', instagramUrl: '', linkedinUrl: '', youtubeUrl: '',
@@ -35,8 +44,18 @@ const AdminSiteSettings: React.FC = () => {
     });
 
     // Dosya State'leri (Sadece yükleme anında kullanılır)
-    const [files, setFiles] = useState<{ logo?: File, hero?: File }>({});
-    const [previews, setPreviews] = useState<{ logo?: string, hero?: string }>({});
+    const [files, setFiles] = useState<{
+        logo?: File;
+        hero?: File;
+        about?: File;           // YENİ
+    }>({});
+
+    // Önizleme State'i (Ekranda görünecekler)
+    const [previews, setPreviews] = useState<{
+        logo?: string;
+        hero?: string;
+        about?: string;           // YENİ
+    }>({});
 
     // Verileri Çek
     useEffect(() => {
@@ -57,6 +76,7 @@ const AdminSiteSettings: React.FC = () => {
                 // Mevcut resim önizlemeleri
                 if (safeData.logoUrl) setPreviews(p => ({ ...p, logo: getImageUrl(safeData.logoUrl) }));
                 if (safeData.heroImageUrl) setPreviews(p => ({ ...p, hero: getImageUrl(safeData.heroImageUrl) }));
+                if (safeData.aboutImageUrl) setPreviews(p => ({ ...p, about: getImageUrl(safeData.aboutImageUrl) }));
             }
         } catch (error) {
             console.error("Ayarlar yüklenemedi:", error);
@@ -72,7 +92,7 @@ const AdminSiteSettings: React.FC = () => {
     };
 
     // Dosya Seçimi
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'hero') => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'hero' | 'about') => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setFiles(prev => ({ ...prev, [type]: file }));
@@ -91,7 +111,7 @@ const AdminSiteSettings: React.FC = () => {
 
             // Text alanlarını ekle
             Object.keys(settings).forEach(key => {
-                if (key !== 'logoUrl' && key !== 'heroImageUrl') {
+                if (key !== 'logoUrl' && key !== 'heroImageUrl' && key !== 'aboutImageUrl') {
                     // Backend büyük harf bekleyebilir, ilk harfi büyütüyoruz
                     const keyUpper = key.charAt(0).toUpperCase() + key.slice(1);
                     formData.append(keyUpper, settings[key]);
@@ -101,6 +121,7 @@ const AdminSiteSettings: React.FC = () => {
             // Dosyaları ekle
             if (files.logo) formData.append('LogoImage', files.logo);
             if (files.hero) formData.append('HeroImage', files.hero);
+            if (files.about) formData.append('AboutImage', files.about);
 
             // ID
             formData.append('Id', settings.id.toString());
@@ -112,6 +133,7 @@ const AdminSiteSettings: React.FC = () => {
             setFiles({});
             if (logoInputRef.current) logoInputRef.current.value = '';
             if (heroInputRef.current) heroInputRef.current.value = '';
+            if (aboutInputRef.current) aboutInputRef.current.value = '';
 
         } catch (error) {
             console.error("Kaydetme hatası:", error);
@@ -264,18 +286,92 @@ const AdminSiteSettings: React.FC = () => {
                     {/* --- 4. STUDIO & METRICS (CV YOK) --- */}
                     {activeTab === 'studio' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <SectionHeader title="Key Metrics & Files" icon={BarChart3} />
 
-                            <div className="grid grid-cols-3 gap-6">
-                                <InputGroup label="Years Active" name="yearsActive" value={settings.yearsActive} onChange={handleChange} placeholder="e.g. 12" />
-                                <InputGroup label="Projects Done" name="projectsCompleted" value={settings.projectsCompleted} onChange={handleChange} placeholder="e.g. 140+" />
-                                <InputGroup label="Awards Won" name="awardsWon" value={settings.awardsWon} onChange={handleChange} placeholder="e.g. 25" />
+                            {/* A. HAKKIMIZDA (ABOUT US) */}
+                            <div className="space-y-6">
+                                <SectionHeader title="About Us Section" icon={Type} />
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                    {/* Sol: Resim Yükleme */}
+                                    <div className="space-y-4">
+                                        <label className="text-xs font-bold text-zinc-500 uppercase">About Image</label>
+                                        <div
+                                            onClick={() => aboutInputRef.current?.click()}
+                                            className="border-2 border-dashed border-zinc-300 dark:border-[#2A303C] rounded-xl bg-zinc-50 dark:bg-[#1A1D27] h-64 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-100 dark:hover:bg-[#1F2430] transition-colors relative overflow-hidden group"
+                                        >
+                                            {previews.about ? (
+                                                <img src={previews.about} alt="About" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="text-center text-zinc-400">
+                                                    <UploadCloud size={32} className="mx-auto mb-2" />
+                                                    <span className="text-xs">Upload Image</span>
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">Change</div>
+                                        </div>
+                                        {/* Ref tanımlamayı unutma: const aboutInputRef = useRef<HTMLInputElement>(null); */}
+                                        <input type="file" ref={aboutInputRef} onChange={(e) => handleFileChange(e, 'about')} className="hidden" accept="image/*" />
+                                    </div>
+
+                                    {/* Sağ: Metinler */}
+                                    <div className="md:col-span-2 space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <InputGroup label="Title (EN)" name="aboutTitle" value={settings.aboutTitle} onChange={handleChange} />
+                                            <InputGroup label="Title (TR)" name="aboutTitleTr" value={settings.aboutTitleTr} onChange={handleChange} />
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <TextAreaGroup label="Description (EN)" name="aboutDescription" value={settings.aboutDescription} onChange={handleChange} rows={6} />
+                                            <TextAreaGroup label="Description (TR)" name="aboutDescriptionTr" value={settings.aboutDescriptionTr} onChange={handleChange} rows={6} />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="bg-white dark:bg-[#151922] p-6 rounded-xl border border-zinc-200 dark:border-[#1F2430]">
-                                <h4 className="font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2"><Video size={18} /> Showreel Video</h4>
+                            {/* B. FELSEFE (PHILOSOPHY - "Driven by Integrity") */}
+                            <div className="space-y-6 pt-6 border-t border-zinc-200 dark:border-[#1F2430]">
+                                <SectionHeader title="Philosophy Section (Driven by Integrity)" icon={Globe} />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <InputGroup label="Section Title (EN)" name="philosophyTitle" value={settings.philosophyTitle} onChange={handleChange} />
+                                    <InputGroup label="Section Title (TR)" name="philosophyTitleTr" value={settings.philosophyTitleTr} onChange={handleChange} />
 
-                                <InputGroup label="Showreel URL (Vimeo/Youtube)" name="showreelUrl" value={settings.showreelUrl} onChange={handleChange} placeholder="https://vimeo.com/..." />
+                                    <TextAreaGroup label="Text (EN)" name="philosophyDescription" value={settings.philosophyDescription} onChange={handleChange} rows={3} />
+                                    <TextAreaGroup label="Text (TR)" name="philosophyDescriptionTr" value={settings.philosophyDescriptionTr} onChange={handleChange} rows={3} />
+                                </div>
+                            </div>
+
+                            {/* C. ESNEK METRİKLER (3 Slot) */}
+                            <div className="space-y-6 pt-6 border-t border-zinc-200 dark:border-[#1F2430]">
+                                <SectionHeader title="Key Metrics (Customizable)" icon={BarChart3} />
+                                <p className="text-xs text-zinc-500 mb-4">Define up to 3 metrics to show on the studio page.</p>
+
+                                {/* Metric 1 */}
+                                <div className="bg-white dark:bg-[#151922] p-4 rounded-xl border border-zinc-200 dark:border-[#1F2430] grid grid-cols-3 gap-4">
+                                    <InputGroup label="Metric 1 Title (EN)" name="metric1Title" value={settings.metric1Title} onChange={handleChange} placeholder="e.g. Years Active" />
+                                    <InputGroup label="Metric 1 Title (TR)" name="metric1TitleTr" value={settings.metric1TitleTr} onChange={handleChange} />
+                                    <InputGroup label="Metric 1 Value" name="metric1Value" value={settings.metric1Value} onChange={handleChange} placeholder="e.g. 12" />
+                                </div>
+
+                                {/* Metric 2 */}
+                                <div className="bg-white dark:bg-[#151922] p-4 rounded-xl border border-zinc-200 dark:border-[#1F2430] grid grid-cols-3 gap-4">
+                                    <InputGroup label="Metric 2 Title (EN)" name="metric2Title" value={settings.metric2Title} onChange={handleChange} placeholder="e.g. Projects" />
+                                    <InputGroup label="Metric 2 Title (TR)" name="metric2TitleTr" value={settings.metric2TitleTr} onChange={handleChange} />
+                                    <InputGroup label="Metric 2 Value" name="metric2Value" value={settings.metric2Value} onChange={handleChange} placeholder="e.g. 140+" />
+                                </div>
+
+                                {/* Metric 3 */}
+                                <div className="bg-white dark:bg-[#151922] p-4 rounded-xl border border-zinc-200 dark:border-[#1F2430] grid grid-cols-3 gap-4">
+                                    <InputGroup label="Metric 3 Title (EN)" name="metric3Title" value={settings.metric3Title} onChange={handleChange} placeholder="e.g. Awards" />
+                                    <InputGroup label="Metric 3 Title (TR)" name="metric3TitleTr" value={settings.metric3TitleTr} onChange={handleChange} />
+                                    <InputGroup label="Metric 3 Value" name="metric3Value" value={settings.metric3Value} onChange={handleChange} placeholder="e.g. 25" />
+                                </div>
+                            </div>
+
+                            {/* D. SHOWREEL */}
+                            <div className="pt-6 border-t border-zinc-200 dark:border-[#1F2430]">
+                                <div className="bg-white dark:bg-[#151922] p-6 rounded-xl border border-zinc-200 dark:border-[#1F2430]">
+                                    <h4 className="font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2"><Video size={18} /> Showreel Video</h4>
+                                    <InputGroup label="Showreel URL (Vimeo/Youtube)" name="showreelUrl" value={settings.showreelUrl} onChange={handleChange} placeholder="https://vimeo.com/..." />
+                                </div>
                             </div>
                         </div>
                     )}
