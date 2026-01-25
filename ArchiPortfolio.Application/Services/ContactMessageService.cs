@@ -62,6 +62,30 @@ namespace ArchiPortfolio.Application.Services
                 // Mail hatası loglanabilir ama kullanıcıya hata dönmemeli
             }
         }
+        
+        public async Task<ContactMessageDto> GetMessageByIdAsync(int id)
+        {
+            var message = await _repository.GetByIdAsync(id);
+            if (message == null) return null;
+    
+            // Mesaj detayına girildiğinde otomatik 'Okundu' işaretleyelim (Opsiyonel ama kullanışlı)
+            if (!message.IsRead)
+            {
+                message.IsRead = true;
+                _repository.Update(message);
+                await _repository.SaveChangesAsync();
+            }
+
+            return _mapper.Map<ContactMessageDto>(message);
+        }
+        
+        public async Task ReplyToMessageAsync(int id, string subject, string messageBody)
+        {
+            var message = await _repository.GetByIdAsync(id);
+            if (message == null) throw new Exception("Mesaj bulunamadı.");
+            
+            await _emailService.SendEmailAsync(message.Email, subject, messageBody);
+        }
 
         public async Task<List<ContactMessageDto>> GetAllMessagesAsync()
         {

@@ -1,16 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-    ArrowLeft,
-    Bold,
-    Italic,
-    Underline,
-    List,
-    Link as LinkIcon,
-    Image as ImageIcon,
-    Paperclip,
-    Send,
-    X
+    ArrowLeft, Bold, Italic, Underline, List,
+    Paperclip, Send, X
 } from 'lucide-react';
 import { contactService } from '../../services/contactService';
 
@@ -18,26 +10,22 @@ const AdminReply: React.FC = () => {
     const navigate = useNavigate();
     const { id } = useParams();
 
+    // Referanslar
+    const editorRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     // State
     const [message, setMessage] = useState<any>(null);
     const [replySubject, setReplySubject] = useState('');
-    const [replyBody, setReplyBody] = useState('');
-    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [attachments, setAttachments] = useState<File[]>([]);
+    const [replyHtml, setReplyHtml] = useState('');
 
     useEffect(() => {
         const fetchMessage = async () => {
             if (!id) return;
-
             try {
-                // Burada id'yi loglayalım (konsol yok ama en azından kodda kalsın)
-                console.log("Fetching message with ID:", id);
-
                 const data = await contactService.getMessageById(Number(id));
-
-                if (!data) {
-                    throw new Error("No data returned from API");
-                }
-
                 setMessage({
                     id: data.id,
                     name: data.senderName || 'Unknown',
@@ -48,231 +36,180 @@ const AdminReply: React.FC = () => {
                 });
 
                 setReplySubject(`Re: ${data.subject || 'Inquiry'}`);
-                setReplyBody(`Dear ${data.senderName ? data.senderName.split(' ')[0] : 'Sir/Madam'},\n\nThank you for reaching out to Vivere Design.\n\nBest regards,\nVivere Team`);
+
+                // DÜZELTME 1: Fazla boşluklar kaldırıldı (Tek satır haline getirildi)
+                const initialTemplate = `<p>Dear ${data.senderName ? data.senderName.split(' ')[0] : 'Sir/Madam'},</p>
+                <p>Thank you for reaching out to Vivere Design.</p>
+                <p>Best regards,</p><p><strong>Vivere Team</strong></p>`;
+
+                setReplyHtml(initialTemplate);
+
+                if (editorRef.current) {
+                    editorRef.current.innerHTML = initialTemplate;
+                }
+
             } catch (err: any) {
-                console.error("Failed to fetch message details:", err);
-                setError(err.message || "Failed to load message");
+                console.error("Hata:", err);
             }
         };
-
         fetchMessage();
     }, [id]);
 
-    const handleSendReply = () => {
+    const handleSendReply = async () => {
         if (!message) return;
-        const mailtoLink = `mailto:${message.email}?subject=${encodeURIComponent(replySubject)}&body=${encodeURIComponent(replyBody)}`;
-        window.location.href = mailtoLink;
+        setLoading(true);
+        try {
+            const finalContent = editorRef.current?.innerHTML || replyHtml;
+            await contactService.replyToMessage(message.id, replySubject, finalContent);
+            alert("Cevap başarıyla gönderildi!");
+            navigate('/admin/messages');
+        } catch (error) {
+            console.error("Gönderim hatası:", error);
+            alert("Mail gönderilemedi.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+    const handleAttachClick = () => {
+        fileInputRef.current?.click();
+    };
 
-    const insertFormat = (format: string) => {
-        const textarea = textareaRef.current;
-        if (!textarea) return;
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setAttachments(prev => [...prev, ...Array.from(e.target.files || [])]);
+        }
+    };
 
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const text = textarea.value;
-        const before = text.substring(0, start);
-        const selection = text.substring(start, end);
-        const after = text.substring(end);
+    const removeAttachment = (index: number) => {
+        setAttachments(prev => prev.filter((_, i) => i !== index));
+    };
 
-        let newText = text;
-        let newCursorStart = start;
-        let newCursorEnd = end;
+    // Formatlama
+    const applyFormat = (command: string, value?: string) => {
+        document.execCommand(command, false, value);
+        editorRef.current?.focus();
+    };
 
-        switch (format) {
-            case 'bold':
-                newText = `${before}**${selection}**${after}`;
-                if (!selection) {
-                    newCursorStart = start + 2;
-                    newCursorEnd = start + 2;
-                } else {
-                    newCursorStart = start + 2;
-                    newCursorEnd = end + 2;
-                }
-                break;
-            case 'italic':
-                newText = `${before}*${selection}*${after}`;
-                if (!selection) {
-                    newCursorStart = start + 1;
-                    newCursorEnd = start + 1;
-                } else {
-                    newCursorStart = start + 1;
-                    newCursorEnd = end + 1;
-                }
-                break;
-            case 'underline':
-                newText = `${before}<u>${selection}</u>${after}`;
-                if (!selection) {
-                    newCursorStart = start + 3;
-                    newCursorEnd = start + 3;
-                } else {
-                    newCursorStart = start + 3;
-                    newCursorEnd = end + 3;
-                }
-                break;
-            case 'list':
-                const prefix = (start === 0 || text[start - 1] === '\n') ? '- ' : '\n- ';
-                newText = `${before}${prefix}${selection}${after}`;
-                newCursorStart = start + prefix.length;
-                newCursorEnd = end + prefix.length;
-                break;
+    const handleToolbarClick = (action: string) => {
+        switch (action) {
+            case 'bold': applyFormat('bold'); break;
+            case 'italic': applyFormat('italic'); break;
+            case 'underline': applyFormat('underline'); break;
+            case 'list': applyFormat('insertUnorderedList'); break;
             case 'link':
-                newText = `${before}[${selection}](url)${after}`;
-                newCursorStart = start + 1;
-                newCursorEnd = end + 1;
-                if (!selection) {
-                    newCursorEnd = newCursorStart;
-                }
+                const url = prompt('Link adresi:', 'https://');
+                if (url) applyFormat('createLink', url);
                 break;
-            case 'image':
-                newText = `${before}![${selection}](image-url)${after}`;
-                newCursorStart = start + 2;
-                newCursorEnd = end + 2;
-                if (!selection) {
-                    newCursorEnd = newCursorStart;
-                }
+            case 'attach':
+                handleAttachClick();
                 break;
         }
-
-        setReplyBody(newText);
-
-        setTimeout(() => {
-            textarea.focus();
-            textarea.setSelectionRange(newCursorStart, newCursorEnd);
-        }, 0);
     };
 
-    if (error) {
-        return (
-            <div className="p-8 flex flex-col items-center justify-center text-red-500 h-full">
-                <p className="font-bold mb-2">Error loading message</p>
-                <p className="text-sm text-zinc-500">{error}</p>
-                <div className="mt-4 text-xs text-zinc-400">Message ID: {id}</div>
-                <button onClick={() => navigate('/admin/messages')} className="mt-6 px-4 py-2 bg-zinc-100 rounded hover:bg-zinc-200 text-zinc-800 transition-colors">
-                    Back to Messages
-                </button>
-            </div>
-        );
-    }
-
-    if (!message) return <div className="p-8 text-zinc-500 h-full flex items-center justify-center">Loading message...</div>;
+    if (!message) return <div className="p-8 text-center text-zinc-500">Loading message details...</div>;
 
     return (
         <div className="flex-1 flex flex-col h-full overflow-hidden bg-zinc-50 dark:bg-[#0B0E14] transition-colors duration-500">
-            {/* Header */}
             <header className="px-8 py-6 flex items-center gap-4">
-                <button
-                    onClick={() => navigate('/admin/messages')}
-                    className="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-[#1F2430] text-zinc-500 dark:text-slate-400 transition-colors"
-                >
+                <button onClick={() => navigate('/admin/messages')} className="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-[#1F2430] text-zinc-500">
                     <ArrowLeft size={20} />
                 </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Reply to Inquiry</h1>
-                    <p className="text-zinc-500 dark:text-slate-400 text-sm">Drafting response</p>
-                </div>
+                <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Reply to Inquiry</h1>
             </header>
 
-            {/* Content Area */}
             <div className="flex-1 overflow-hidden px-8 pb-8">
                 <div className="h-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-                    {/* Left Panel: Original Message */}
-                    <div className="lg:col-span-2 bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-2xl p-6 flex flex-col overflow-hidden">
-                        <div className="flex justify-between items-start mb-6">
-                            <div className="flex items-center gap-3">
-                                <img src={message.avatar} alt={message.name} className="w-10 h-10 rounded-full object-cover" />
-                                <div>
-                                    <h3 className="font-semibold text-zinc-900 dark:text-white text-sm">{message.name}</h3>
-                                    <p className="text-xs text-zinc-500 dark:text-slate-500">{message.email}</p>
-                                </div>
+                    {/* SOL PANEL: Gelen Mesaj */}
+                    <div className="lg:col-span-2 bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-2xl p-6 flex flex-col h-full overflow-hidden">
+                        <div className="mb-6 pb-6 border-b border-zinc-100 dark:border-[#1F2430]">
+                            <div className="flex justify-between items-start mb-2">
+                                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Original Message From</span>
+                                <span className="text-[10px] bg-zinc-100 dark:bg-[#1A1D27] px-2 py-1 rounded text-zinc-500">INBOX</span>
                             </div>
-                            <span className="px-2 py-1 bg-zinc-100 dark:bg-[#1F2430] text-[10px] font-bold text-zinc-500 dark:text-slate-500 rounded uppercase tracking-wider border border-zinc-200 dark:border-[#2A303C]">
-                                Original
-                            </span>
+                            <div className="font-bold text-lg text-zinc-900 dark:text-white mb-1">{message.name}</div>
+                            <div className="text-sm text-zinc-500 font-mono">{message.email}</div>
                         </div>
-
-                        <div className="space-y-1 mb-4">
-                            <span className="text-xs font-bold text-zinc-500 dark:text-slate-500 uppercase">Subject</span>
-                            <p className="text-sm font-medium text-zinc-900 dark:text-white">{message.subject}</p>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                            <div className="prose prose-sm dark:prose-invert text-zinc-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">
-                                {message.content}
-                            </div>
+                        <div className="flex-1 overflow-y-auto prose prose-sm dark:prose-invert max-w-none pr-2 custom-scrollbar">
+                            {message.content}
                         </div>
                     </div>
 
-                    {/* Right Panel: Reply Editor */}
-                    <div className="lg:col-span-3 bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-2xl flex flex-col overflow-hidden">
+                    {/* SAĞ PANEL: Cevap Editörü */}
+                    <div className="lg:col-span-3 bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-2xl flex flex-col h-full overflow-hidden shadow-sm">
 
-                        {/* Editor Toolbar */}
-                        <div className="px-4 py-3 border-b border-zinc-200 dark:border-[#1F2430] flex items-center justify-between bg-zinc-50/50 dark:bg-[#1A1D27]/50">
-                            <div className="flex items-center gap-1">
-                                <ToolbarButton icon={Bold} onClick={() => insertFormat('bold')} />
-                                <ToolbarButton icon={Italic} onClick={() => insertFormat('italic')} />
-                                <ToolbarButton icon={Underline} onClick={() => insertFormat('underline')} />
-                                <div className="w-px h-4 bg-zinc-300 dark:bg-[#2A303C] mx-2"></div>
-                                <ToolbarButton icon={List} onClick={() => insertFormat('list')} />
-                                <ToolbarButton icon={LinkIcon} onClick={() => insertFormat('link')} />
-                                <ToolbarButton icon={ImageIcon} onClick={() => insertFormat('image')} />
-                            </div>
+                        {/* Toolbar */}
+                        <div className="px-4 py-3 border-b border-zinc-200 dark:border-[#1F2430] flex gap-1 bg-zinc-50/80 dark:bg-[#1A1D27]/80 backdrop-blur-sm">
+                            <ToolbarButton icon={Bold} onClick={() => handleToolbarClick('bold')} title="Bold" />
+                            <ToolbarButton icon={Italic} onClick={() => handleToolbarClick('italic')} title="Italic" />
+                            <ToolbarButton icon={Underline} onClick={() => handleToolbarClick('underline')} title="Underline" />
+                            <div className="w-px h-5 bg-zinc-300 dark:bg-[#2A303C] mx-2 self-center"></div>
+                            <ToolbarButton icon={List} onClick={() => handleToolbarClick('list')} title="Bullet List" />
+                            <ToolbarButton icon={Paperclip} onClick={() => handleToolbarClick('attach')} title="Attach File/Image" />
                         </div>
 
-                        {/* Fields */}
-                        <div className="p-6 space-y-4 flex-1 flex flex-col overflow-hidden">
+                        {/* Yazı Alanı */}
+                        <div className="p-6 flex-1 flex flex-col gap-4 overflow-hidden">
                             <div className="flex items-center gap-4">
-                                <label className="text-sm text-zinc-500 dark:text-slate-500 w-12 pt-1">To:</label>
-                                <div className="flex items-center gap-2 pl-2 pr-1 py-1 rounded bg-blue-600/10 border border-blue-600/20">
-                                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400">{message.name}</span>
-                                    <button className="p-0.5 hover:bg-blue-600/20 rounded text-blue-600 dark:text-blue-400 transition-colors">
-                                        <X size={12} />
-                                    </button>
-                                </div>
+                                <label className="text-sm w-16 font-medium text-zinc-500">To:</label>
+                                <span className="text-sm px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full font-medium">
+                                    {message.email}
+                                </span>
                             </div>
 
-                            <div className="flex items-center gap-4 py-2 border-b border-zinc-100 dark:border-[#1F2430]">
-                                <label className="text-sm text-zinc-500 dark:text-slate-500 w-12">Subject:</label>
+                            <div className="flex items-center gap-4 border-b border-zinc-100 dark:border-[#1F2430] pb-2">
+                                <label className="text-sm w-16 font-medium text-zinc-500">Subject:</label>
                                 <input
-                                    type="text"
                                     value={replySubject}
                                     onChange={(e) => setReplySubject(e.target.value)}
-                                    className="flex-1 bg-transparent text-sm font-medium text-zinc-900 dark:text-white focus:outline-none"
+                                    className="flex-1 bg-transparent outline-none text-sm font-semibold text-zinc-900 dark:text-white"
                                 />
                             </div>
 
-                            <textarea
-                                ref={textareaRef}
-                                className="flex-1 bg-transparent text-sm leading-relaxed text-zinc-900 dark:text-slate-200 placeholder-zinc-400 dark:placeholder-slate-600 resize-none focus:outline-none p-2"
-                                placeholder="Type your reply here..."
-                                value={replyBody}
-                                onChange={(e) => setReplyBody(e.target.value)}
+                            <div
+                                ref={editorRef}
+                                contentEditable
+                                className="flex-1 overflow-y-auto outline-none text-sm leading-relaxed p-4 border border-zinc-200 dark:border-[#2A303C] rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-zinc-800 dark:text-slate-200 min-h-[200px] [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                                style={{ whiteSpace: 'pre-wrap' }}
+                                onInput={(e) => setReplyHtml(e.currentTarget.innerHTML)}
                             />
+
+                            {/* DÜZELTME 2: Dosya ikonları temizlendi (Soldaki paperclip kaldırıldı) */}
+                            {attachments.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {attachments.map((file, idx) => (
+                                        <div key={idx} className="flex items-center gap-2 bg-zinc-100 dark:bg-[#1A1D27] px-3 py-1.5 rounded-lg text-xs border border-zinc-200 dark:border-[#2A303C]">
+                                            {/* Paperclip ikonu buradan kaldırıldı */}
+                                            <span className="max-w-[150px] truncate text-zinc-700 dark:text-slate-300 font-medium">{file.name}</span>
+                                            <button onClick={() => removeAttachment(idx)} className="hover:text-red-500 transition-colors ml-1">
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Footer */}
-                        <div className="px-6 py-4 border-t border-zinc-200 dark:border-[#1F2430] flex items-center justify-between bg-zinc-50/50 dark:bg-[#1A1D27]/50">
-                            <button className="flex items-center gap-2 text-zinc-500 dark:text-slate-400 hover:text-zinc-800 dark:hover:text-slate-200 text-sm transition-colors">
-                                <Paperclip size={16} />
-                                <span>Attach Files</span>
-                            </button>
-                            <div className="flex items-center gap-3">
-                                <button className="text-sm font-medium text-zinc-600 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
-                                    Save Draft
-                                </button>
-                                <button
-                                    onClick={handleSendReply}
-                                    className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-600/20 group"
-                                >
-                                    <span>Send Reply</span>
-                                    <Send size={14} className="group-hover:translate-x-1 transition-transform" />
-                                </button>
-                            </div>
-                        </div>
+                        <div className="px-6 py-4 border-t border-zinc-200 dark:border-[#1F2430] flex justify-end items-center bg-zinc-50/50 dark:bg-[#1A1D27]/50">
+                            <input
+                                type="file"
+                                multiple
+                                ref={fileInputRef}
+                                className="hidden"
+                                onChange={handleFileChange}
+                            />
 
+                            <button
+                                onClick={handleSendReply}
+                                disabled={loading}
+                                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:translate-y-[-1px]"
+                            >
+                                <span>{loading ? 'Sending...' : 'Send Reply'}</span>
+                                <Send size={16} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -280,15 +217,17 @@ const AdminReply: React.FC = () => {
     );
 };
 
-const ToolbarButton = ({ icon: Icon, onClick }: { icon: React.ElementType, onClick?: () => void }) => (
+const ToolbarButton = ({ icon: Icon, onClick, title }: { icon: React.ElementType, onClick?: () => void, title?: string }) => (
     <button
+        type="button"
+        title={title}
         onMouseDown={(e) => {
             e.preventDefault();
             onClick?.();
         }}
-        className="p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-[#1F2430] text-zinc-500 dark:text-slate-400 transition-colors"
+        className="p-2 rounded-md hover:bg-zinc-200 dark:hover:bg-[#2A303C] text-zinc-500 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
     >
-        <Icon size={16} />
+        <Icon size={18} />
     </button>
 );
 

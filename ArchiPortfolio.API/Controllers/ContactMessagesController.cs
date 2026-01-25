@@ -28,12 +28,40 @@ namespace ArchiPortfolio.API.Controllers
             var messages = await _contactMessageService.GetAllMessagesAsync();
             return Ok(messages);
         }
+        
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var message = await _contactMessageService.GetMessageByIdAsync(id);
+            if (message == null) return NotFound("Mesaj bulunamadı.");
+            return Ok(message);
+        }
 
         [HttpPut("{id}/read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
             await _contactMessageService.MarkAsReadAsync(id);
             return NoContent();
+        }
+        
+        [HttpPost("{id}/reply")]
+        public async Task<IActionResult> Reply(int id, [FromBody] ReplyDto replyDto)
+        {
+            try
+            {
+                await _contactMessageService.ReplyToMessageAsync(id, replyDto.Subject, replyDto.MessageBody);
+                return Ok(new { message = "Reply sent successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        
+        public class ReplyDto
+        {
+            public string Subject { get; set; }
+            public string MessageBody { get; set; }
         }
     }
 }

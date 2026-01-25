@@ -9,7 +9,9 @@ namespace ArchiPortfolio.Application.Interfaces.Services
         // İsim birliği sağlandı: CreateMessageAsync
         Task CreateMessageAsync(CreateContactMessageDto createDto);
         Task<List<ContactMessageDto>> GetAllMessagesAsync();
+        Task<ContactMessageDto> GetMessageByIdAsync(int id);
         Task MarkAsReadAsync(int id);
+        Task ReplyToMessageAsync(int id, string subject, string messageBody);
         Task DeleteMessageAsync(int id); // Bunu da ekleyelim
     }
 }

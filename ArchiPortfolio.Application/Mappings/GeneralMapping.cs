@@ -1,6 +1,6 @@
 using AutoMapper;
-using ArchiPortfolio.Domain.Entities;
 using ArchiPortfolio.Application.DTOs;
+using ArchiPortfolio.Domain.Entities;
 using System.Linq;
 
 namespace ArchiPortfolio.Application.Mappings
@@ -9,35 +9,26 @@ namespace ArchiPortfolio.Application.Mappings
     {
         public GeneralMapping()
         {
-            // ProjectImage -> ProjectImageDto
+          
+            CreateMap<ContactMessage, ContactMessageDto>()
+                .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src => src.Name))
+                .ReverseMap();
+
+            CreateMap<CreateContactMessageDto, ContactMessage>();
+
+           
             CreateMap<ProjectImage, ProjectImageDto>();
             
-            // Project -> ProjectDto
             CreateMap<Project, ProjectDto>()
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name))
-                
-                // CoverImageUrl isimleri aynı olduğu için OTOMATİK eşleşir, yazmaya gerek yok.
-
-                // Galeri: IsPlan FALSE olanlar
                 .ForMember(dest => dest.Gallery, opt => opt.MapFrom(src => 
-                    src.ProjectImages
-                        .Where(img => !img.IsPlan)
-                        .Select(img => img.ImageUrl)
-                        .ToList()))
-                       
-                // Planlar: IsPlan TRUE olanlar
+                    src.ProjectImages.Where(img => !img.IsPlan).Select(img => img.ImageUrl).ToList()))
                 .ForMember(dest => dest.Plans, opt => opt.MapFrom(src => 
-                    src.ProjectImages
-                        .Where(img => img.IsPlan)
-                        .Select(img => img.ImageUrl)
-                        .ToList()));
+                    src.ProjectImages.Where(img => img.IsPlan).Select(img => img.ImageUrl).ToList()));
 
-            // Diğer Eşleşmeler
             CreateMap<Category, CategoryDto>();
             CreateMap<Service, ServiceDto>();
             CreateMap<TeamMember, TeamMemberDto>();
-            CreateMap<ContactMessage, ContactMessageDto>().ReverseMap();
-            CreateMap<ContactMessage, CreateContactMessageDto>().ReverseMap();
             CreateMap<SiteSetting, SiteSettingDto>();
         }
     }

@@ -20,5 +20,9 @@ export const contactService = {
     getMessageById: async (id: number): Promise<any> => {
         const response = await axios.get(`${API_URL}/${id}`);
         return response.data;
+    },
+
+    replyToMessage: async (id: number, subject: string, messageBody: string): Promise<void> => {
+        await axios.post(`${API_URL}/${id}/reply`, { subject, messageBody });
     }
 };
