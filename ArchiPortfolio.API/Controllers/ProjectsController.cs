@@ -75,7 +75,6 @@ namespace ArchiPortfolio.API.Controllers
                 ProjectYear = model.ProjectYear,
                 Area = model.Area,
                 Status = model.Status,
-                PressKitUrl = model.PressKitUrl ?? "",
                 IsFeatured = model.IsFeatured,
                 CategoryId = model.CategoryId,
                 

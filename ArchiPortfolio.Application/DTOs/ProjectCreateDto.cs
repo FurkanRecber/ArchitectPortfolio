@@ -26,7 +26,6 @@ namespace ArchiPortfolio.Application.DTOs
         public string ProjectYear { get; set; }
         public string Area { get; set; }
         public string Status { get; set; } = "Completed";
-        public string? PressKitUrl { get; set; }
         public bool IsFeatured { get; set; } = false;
         
         public int CategoryId { get; set; }

@@ -28,7 +28,8 @@ namespace ArchiPortfolio.API.Controllers
             var messages = await _contactMessageService.GetAllMessagesAsync();
             return Ok(messages);
         }
-        
+
+        // --- BU KISIM EKLENDİ (404 Hatasını Çözer) ---
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -37,13 +38,6 @@ namespace ArchiPortfolio.API.Controllers
             return Ok(message);
         }
 
-        [HttpPut("{id}/read")]
-        public async Task<IActionResult> MarkAsRead(int id)
-        {
-            await _contactMessageService.MarkAsReadAsync(id);
-            return NoContent();
-        }
-        
         [HttpPost("{id}/reply")]
         public async Task<IActionResult> Reply(int id, [FromBody] ReplyDto replyDto)
         {
@@ -57,11 +51,18 @@ namespace ArchiPortfolio.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-        
-        public class ReplyDto
+
+        [HttpPut("{id}/read")]
+        public async Task<IActionResult> MarkAsRead(int id)
         {
-            public string Subject { get; set; }
-            public string MessageBody { get; set; }
+            await _contactMessageService.MarkAsReadAsync(id);
+            return NoContent();
         }
+    }
+
+    public class ReplyDto
+    {
+        public string Subject { get; set; }
+        public string MessageBody { get; set; }
     }
 }

@@ -26,7 +26,6 @@ namespace ArchiPortfolio.Domain.Entities
         public string ProjectYear { get; set; }
         public string Area { get; set; }
         public string Status { get; set; } // "Completed" statik bir veri, bunu frontend çevirebilir veya buraya StatusTr eklenebilir.
-        public string PressKitUrl { get; set; }
         public bool IsFeatured { get; set; }
         public DateTime PublishDate { get; set; }
 

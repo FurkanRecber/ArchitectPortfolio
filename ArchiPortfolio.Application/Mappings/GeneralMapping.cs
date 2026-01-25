@@ -30,6 +30,19 @@ namespace ArchiPortfolio.Application.Mappings
             CreateMap<Service, ServiceDto>();
             CreateMap<TeamMember, TeamMemberDto>();
             CreateMap<SiteSetting, SiteSettingDto>();
+            // Category -> CategoryDto
+            CreateMap<Category, CategoryDto>()
+                .ForMember(dest => dest.ProjectCount, opt => opt.MapFrom(src => src.Projects.Count));
+
+            // CreateCategoryDto -> Category
+            CreateMap<CreateCategoryDto, Category>()
+                .ForMember(dest => dest.CoverImageUrl, opt => opt.Ignore()); // Resmi serviste işleyeceğiz
+            
+            CreateMap<SiteSetting, SiteSettingDto>().ReverseMap();
+
+            CreateMap<UpdateSiteSettingDto, SiteSetting>()
+                .ForMember(dest => dest.LogoUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.HeroImageUrl, opt => opt.Ignore());
         }
     }
 }

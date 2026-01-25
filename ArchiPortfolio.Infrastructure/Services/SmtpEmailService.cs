@@ -32,7 +32,7 @@ namespace ArchiPortfolio.Infrastructure.Services
 
                 var mailMessage = new MailMessage
                 {
-                    From = new MailAddress(senderEmail, "ArchiPortfolio Contact"),
+                    From = new MailAddress(senderEmail, "Vivere Design"),
                     Subject = subject,
                     Body = messageBody,
                     IsBodyHtml = true

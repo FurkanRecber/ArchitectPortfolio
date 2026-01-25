@@ -3,6 +3,7 @@ using System;
 using ArchiPortfolio.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ArchiPortfolio.Persistence.Migrations
 {
     [DbContext(typeof(ArchiPortfolioDbContext))]
-    partial class ArchiPortfolioDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260125155207_UpdateCategoryTable")]
+    partial class UpdateCategoryTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -369,6 +372,22 @@ namespace ArchiPortfolio.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AboutText")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AboutTextTr")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AboutTitle")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AboutTitleTr")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Address")
                         .IsRequired()
                         .HasColumnType("text");
@@ -377,44 +396,8 @@ namespace ArchiPortfolio.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("AwardsWon")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CopyrightText")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CopyrightTextTr")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CtaButtonText")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CtaButtonTextTr")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CtaDescription")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CtaDescriptionTr")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CtaTitle")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CtaTitleTr")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -424,47 +407,7 @@ namespace ArchiPortfolio.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("FooterDescription")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FooterDescriptionTr")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("GoogleAnalyticsId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("GoogleMapEmbedCode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("GoogleTagManagerId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("HeadScripts")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("HeroButtonText")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("HeroButtonTextTr")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("HeroImageUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("HeroSubtitle")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("HeroSubtitleTr")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -487,44 +430,12 @@ namespace ArchiPortfolio.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("LogoUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("MetaKeywords")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("MetaKeywordsTr")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ProjectsCompleted")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("RobotsTxt")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ShowreelUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("SiteTitle")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("YearsActive")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("YoutubeUrl")
                         .IsRequired()

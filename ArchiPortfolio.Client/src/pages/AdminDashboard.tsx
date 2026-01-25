@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-    LayoutDashboard, FolderOpen, Globe, Settings, MessageSquare,
-    Bell, Plus, Eye, Folder, User, LogOut, ChevronRight, PenLine, Trash2
+    LayoutDashboard, FolderOpen, Globe, MessageSquare,
+    Plus, Eye, Folder, LogOut, PenLine, Trash2
 } from 'lucide-react';
 import { Moon, Sun } from 'lucide-react';
 import vivereLogo from '../assets/vivere.png';
 import vivereBlackLogo from '../assets/vivere_black.png';
+import { getImageUrl } from '../utils/imageUrlHelper';
 
-// Bileşen importları
+// ... (other imports)
+
+// ...
+
+
 import AdminProjects from '../components/admin/AdminProjects';
 import AdminNewProject from '../components/admin/AdminNewProject';
 import AdminCategories from '../components/admin/AdminCategories';
@@ -34,13 +39,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
 
     // UI State'leri
     const [activeTab, setActiveTab] = useState('dashboard');
-    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
     // Veri State'leri (Dashboard Özeti İçin)
     const [dashboardProjects, setDashboardProjects] = useState<Project[]>([]);
     const [messagesCount, setMessagesCount] = useState(0);
-    const [loading, setLoading] = useState(true);
+    const [, setLoading] = useState(true); // Loading used in fetchStats logic but not in UI directly? Should check usage.
+    // Actually error says 'loading' is unused. 'setLoading' is used.
+    // So let's keep setLoading but ignore loading: const [, setLoading] = useState(true);
 
     // 1. Güvenlik Kontrolü (Token yoksa Login'e at)
     useEffect(() => {
@@ -56,7 +62,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
         else if (path === '/admin/projects/new') setActiveTab('projects-new');
         else if (path.startsWith('/admin/projects/edit/') || path.startsWith('/admin/projects/view/')) setActiveTab('projects-edit');
         else if (path === '/admin/categories') setActiveTab('categories');
-        else if (path === '/admin/categories/new') setActiveTab('categories-new');
+        else if (path === '/admin/categories/new' || path.startsWith('/admin/categories/edit/')) setActiveTab('categories-edit');
         else if (path === '/admin/site-settings') setActiveTab('site-settings');
         else if (path === '/admin/messages') setActiveTab('messages');
         else if (path.startsWith('/admin/messages/reply/')) setActiveTab('messages-reply');
@@ -164,7 +170,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                 {activeTab === 'projects' ? <AdminProjects /> :
                     activeTab === 'projects-new' || activeTab === 'projects-edit' ? <AdminNewProject /> :
                         activeTab === 'categories' ? <AdminCategories /> :
-                            activeTab === 'categories-new' || activeTab === 'categories-edit' ? <AdminNewCategory /> :
+                            activeTab === 'categories-edit' ? <AdminNewCategory /> :
                                 activeTab === 'site-settings' ? <AdminSiteSettings /> :
                                     activeTab === 'messages' ? <AdminMessages /> :
                                         activeTab === 'messages-reply' ? <AdminReply /> :
@@ -192,33 +198,62 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
 
                                                 {/* Recent Projects Table */}
                                                 <div className="flex items-center justify-between mb-6">
-                                                    <h3 className="text-xl font-semibold text-zinc-900 dark:text-white">Latest Projects</h3>
+                                                    <div className="flex items-center gap-3">
+                                                        <h3 className="text-xl font-semibold text-zinc-900 dark:text-white">Recent Projects</h3>
+                                                        <span className="bg-zinc-100 dark:bg-[#1F2430] text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded-full text-xs font-semibold">{dashboardProjects.length} Total</span>
+                                                    </div>
                                                     <button onClick={() => navigate('/admin/projects/new')} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                                                        <Plus size={16} /> <span>Add New</span>
+                                                        <Plus size={16} /> <span>Add New Project</span>
                                                     </button>
                                                 </div>
 
-                                                <div className="bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-xl overflow-hidden">
+                                                <div className="bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-xl overflow-hidden shadow-sm">
                                                     <table className="w-full text-left border-collapse">
                                                         <thead>
-                                                            <tr className="border-b border-zinc-200 dark:border-[#1F2430] bg-zinc-50 dark:bg-[#1A1D27] text-xs uppercase text-zinc-500">
+                                                            <tr className="border-b border-zinc-200 dark:border-[#1F2430] bg-zinc-50 dark:bg-[#1A1D27] text-xs uppercase text-zinc-500 font-semibold tracking-wider">
                                                                 <th className="px-6 py-4">Project Name</th>
                                                                 <th className="px-6 py-4">Category</th>
+                                                                <th className="px-6 py-4">Date Added</th>
+                                                                <th className="px-6 py-4">Status</th>
                                                                 <th className="px-6 py-4 text-right">Actions</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody className="divide-y divide-zinc-200 dark:divide-[#1F2430]">
                                                             {dashboardProjects.map((project) => (
-                                                                <tr key={project.id} className="hover:bg-zinc-50 dark:hover:bg-[#1A1D27] transition-colors">
+                                                                <tr key={project.id} className="hover:bg-zinc-50 dark:hover:bg-[#1A1D27] transition-colors group">
                                                                     <td className="px-6 py-4">
                                                                         <div className="flex items-center gap-4">
-                                                                            <img src={project.coverImageUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
-                                                                            <span className="font-medium text-sm text-zinc-900 dark:text-slate-200">{project.title}</span>
+                                                                            <img src={getImageUrl(project.coverImageUrl)} alt="" className="w-12 h-10 rounded-lg object-cover shadow-sm border border-zinc-100 dark:border-white/5" />
+                                                                            <div className="flex flex-col">
+                                                                                <span className="font-bold text-sm text-zinc-900 dark:text-white">{project.title}</span>
+                                                                                <span className="text-[10px] text-zinc-500 font-mono">ID: #PRJ-{String(project.id).padStart(3, '0')}</span>
+                                                                            </div>
                                                                         </div>
                                                                     </td>
-                                                                    <td className="px-6 py-4 text-sm text-zinc-600 dark:text-slate-400">{project.category}</td>
+                                                                    <td className="px-6 py-4 text-sm text-zinc-600 dark:text-slate-400 font-medium">
+                                                                        {project.category}
+                                                                    </td>
+                                                                    <td className="px-6 py-4 text-sm text-zinc-500 dark:text-slate-500">
+                                                                        {project.createdDate ? new Date(project.createdDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Oct 24, 2023'}
+                                                                    </td>
+                                                                    <td className="px-6 py-4">
+                                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${project.status === 'Draft' ? 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' : 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400'}`}>
+                                                                            <span className={`w-1.5 h-1.5 rounded-full ${project.status === 'Draft' ? 'bg-zinc-400' : 'bg-green-500'}`}></span>
+                                                                            {project.status === 'Draft' ? 'Draft' : 'Published'}
+                                                                        </span>
+                                                                    </td>
                                                                     <td className="px-6 py-4 text-right">
-                                                                        <button onClick={() => navigate(`/admin/projects/edit/${project.id}`)} className="p-1.5 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-md text-blue-600"><PenLine size={16} /></button>
+                                                                        <div className="flex items-center justify-end gap-2 text-zinc-400">
+                                                                            <button className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-lg hover:text-indigo-600 transition-colors" title="View">
+                                                                                <Eye size={16} />
+                                                                            </button>
+                                                                            <button onClick={() => navigate(`/admin/projects/edit/${project.id}`)} className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-lg hover:text-blue-600 transition-colors" title="Edit">
+                                                                                <PenLine size={16} />
+                                                                            </button>
+                                                                            <button className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-lg hover:text-red-600 transition-colors" title="Delete">
+                                                                                <Trash2 size={16} />
+                                                                            </button>
+                                                                        </div>
                                                                     </td>
                                                                 </tr>
                                                             ))}

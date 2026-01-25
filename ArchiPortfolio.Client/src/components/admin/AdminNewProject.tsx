@@ -20,7 +20,7 @@ const AdminNewProject: React.FC = () => {
         projectYear: new Date().getFullYear().toString(),
         area: '',
         status: 'Completed',
-        pressKitUrl: '',
+
         isFeatured: false,
         categoryId: '',
         client: '',
@@ -40,6 +40,7 @@ const AdminNewProject: React.FC = () => {
 
     const [coverImage, setCoverImage] = useState<File | null>(null);
     const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+    const [existingGallery, setExistingGallery] = useState<string[]>([]); // Mevcut galeri resimleri
     const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
     // Başlangıç Verilerini Yükle
@@ -63,7 +64,7 @@ const AdminNewProject: React.FC = () => {
                         projectYear: project.year || '',
                         area: project.area || '',
                         status: project.status || 'Completed',
-                        pressKitUrl: '', // Backend'de varsa buraya project.pressKitUrl ekle
+
                         isFeatured: false, // Backend'de varsa buraya project.isFeatured ekle
                         categoryId: project.category || (cats.length > 0 ? cats[0].id.toString() : ''),
                         client: project.client || '',
@@ -75,15 +76,19 @@ const AdminNewProject: React.FC = () => {
                         details: project.details || '',
 
                         // Eğer backend'den gelen nesnede TR alanları varsa buraya eşleştir
-                        // Şimdilik varsayılan boş bırakıyoruz veya İngilizceleri kopyalayabilirsin
                         titleTr: '',
                         descriptionTr: '',
                         detailsTr: ''
                     });
 
-                    // Kapak resmi varsa önizlemeyi ayarla (Helper kullanarak!)
+                    // Kapak resmi
                     if (project.coverImageUrl) {
                         setCoverPreview(getImageUrl(project.coverImageUrl));
+                    }
+
+                    // Galeri resimleri
+                    if (project.gallery && project.gallery.length > 0) {
+                        setExistingGallery(project.gallery);
                     }
                 }
 
@@ -119,6 +124,13 @@ const AdminNewProject: React.FC = () => {
         }
     };
 
+    // Mevcut galeri resmini sil (Locally)
+    // Not: Gerçek silme işlemi için backend'de ayrı bir endpoint olabilir veya update ile gönderilebilir.
+    // Şimdilik sadece listeden çıkarıyoruz, update servisine "kalanlar" gönderilmeli mi kontrol etmek gerek.
+    const handleRemoveExistingImage = (idx: number) => {
+        setExistingGallery(prev => prev.filter((_, i) => i !== idx));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -130,7 +142,7 @@ const AdminNewProject: React.FC = () => {
             data.append('ProjectYear', formData.projectYear);
             data.append('Area', formData.area);
             data.append('Status', formData.status);
-            data.append('PressKitUrl', formData.pressKitUrl);
+
             data.append('IsFeatured', formData.isFeatured.toString());
             data.append('CategoryId', formData.categoryId);
             data.append('Client', formData.client);
@@ -150,6 +162,10 @@ const AdminNewProject: React.FC = () => {
             // --- DOSYALAR ---
             if (coverImage) data.append('CoverImage', coverImage);
             galleryFiles.forEach(file => data.append('GalleryImages', file));
+
+            // Mevcut galeri resimlerini nasıl yollayacağız? 
+            // Eğer backend mevcutları koruyorsa sorun yok. Eğer siliyorsa, kalanları ID veya Path olarak yollamak gerekebilir.
+            // Şimdilik sadece yeni eklenenleri yolluyoruz.
 
             if (isEditMode && id) {
                 // Update mantığı (henüz backend hazır değilse pas geçebilirsin)
@@ -227,10 +243,7 @@ const AdminNewProject: React.FC = () => {
                                 <option value="Concept">Concept</option>
                             </select>
                         </div>
-                        <div className="space-y-2 md:col-span-2">
-                            <label className="text-xs font-bold uppercase text-zinc-500">Press Kit URL</label>
-                            <input name="pressKitUrl" value={formData.pressKitUrl} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
-                        </div>
+
                         <div className="flex items-center gap-3 pt-6">
                             <input type="checkbox" id="isFeatured" name="isFeatured" checked={formData.isFeatured} onChange={handleInputChange} className="w-5 h-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500" />
                             <label htmlFor="isFeatured" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer">Featured Project</label>
@@ -313,9 +326,22 @@ const AdminNewProject: React.FC = () => {
                         <input type="file" multiple onChange={handleGalleryChange} accept="image/*" className="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 dark:file:bg-purple-900/20 dark:file:text-purple-400" />
 
                         <div className="mt-4 grid grid-cols-2 md:grid-cols-6 gap-4">
+                            {/* Mevcut Galerideki Resimler */}
+                            {existingGallery.map((url, idx) => (
+                                <div key={`existing-${idx}`} className="relative group aspect-square bg-zinc-100 dark:bg-[#1A1D27] rounded-lg overflow-hidden border border-blue-500/30">
+                                    <img src={getImageUrl(url)} alt="existing" className="w-full h-full object-cover" />
+                                    <div className="absolute top-1 left-1 bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded shadow-sm opacity-90">Saved</div>
+                                    <button type="button" onClick={() => handleRemoveExistingImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <X size={10} />
+                                    </button>
+                                </div>
+                            ))}
+
+                            {/* Yeni Eklenen Dosyalar */}
                             {galleryFiles.map((file, idx) => (
-                                <div key={idx} className="relative group aspect-square bg-zinc-100 dark:bg-[#1A1D27] rounded-lg overflow-hidden">
-                                    <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
+                                <div key={`new-${idx}`} className="relative group aspect-square bg-zinc-100 dark:bg-[#1A1D27] rounded-lg overflow-hidden border border-green-500/30">
+                                    <img src={URL.createObjectURL(file)} alt="new preview" className="w-full h-full object-cover" />
+                                    <div className="absolute top-1 left-1 bg-green-600 text-white text-[10px] px-1.5 py-0.5 rounded shadow-sm opacity-90">New</div>
                                     <button type="button" onClick={() => setGalleryFiles(files => files.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                                         <X size={10} />
                                     </button>

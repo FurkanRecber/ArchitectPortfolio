@@ -1,17 +1,18 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArchiPortfolio.Application.DTOs;
-using ArchiPortfolio.Domain.Entities;
 
 namespace ArchiPortfolio.Application.Interfaces.Services
 {
     public interface ICategoryService
     {
         Task<List<CategoryDto>> GetAllCategoriesAsync(string langCode);
-        Task<CategoryDto> GetCategoryByIdAsync(int id, string langCode);
+        Task<CategoryDto> GetCategoryByIdAsync(int id);
         
-        Task AddCategoryAsync(Category category);
-        Task UpdateCategoryAsync(Category category);
+        // Parametreler CreateCategoryDto oldu
+        Task AddCategoryAsync(CreateCategoryDto createDto);
+        Task UpdateCategoryAsync(CreateCategoryDto updateDto);
+        
         Task DeleteCategoryAsync(int id);
     }
 }

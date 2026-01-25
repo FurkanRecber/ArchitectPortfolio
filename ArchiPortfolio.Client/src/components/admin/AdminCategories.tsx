@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Search,
     Filter,
@@ -8,90 +8,119 @@ import {
     Armchair,
     Trees,
     Map,
+    Store,
+    Warehouse,
+    Landmark,
+    DraftingCompass,
+    Hotel,
+    Castle,
     ChevronLeft,
     ChevronRight,
     PenLine,
-    Trash2
+    Trash2,
+    Layers // Varsayılan ikon
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { categoryService } from '../../services/categoryService';
+import { getImageUrl } from '../../utils/imageUrlHelper';
+import type { Category } from '../../types';
 
 const AdminCategories: React.FC = () => {
     const navigate = useNavigate();
-    const [searchQuery, setSearchQuery] = React.useState('');
-    const [sortBy, setSortBy] = React.useState<'name' | 'count'>('name');
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock Data
-    const categories = [
-        {
-            id: 1,
-            title: 'Residential',
-            count: 24,
-            icon: Home,
-            description: 'Living Spaces'
-        },
-        {
-            id: 2,
-            title: 'Commercial',
-            count: 12,
-            icon: Building2,
-            description: 'Office & Retail'
-        },
-        {
-            id: 3,
-            title: 'Interior Design',
-            count: 38,
-            icon: Armchair,
-            description: 'Decor & Style'
-        },
-        {
-            id: 4,
-            title: 'Landscape',
-            count: 8,
-            icon: Trees,
-            description: 'Outdoor & Nature'
-        },
-        {
-            id: 5,
-            title: 'Urban Planning',
-            count: 5,
-            icon: Map,
-            description: 'City & Infrastructure'
-        }
+    // Filtreleme ve Sıralama State'leri
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState<'name' | 'count'>('name');
+
+    // İkon Eşleştirme Listesi (AdminNewCategory ile aynı)
+    const icons = [
+        { id: 0, component: Home },
+        { id: 1, component: Building2 },
+        { id: 2, component: Armchair },
+        { id: 3, component: Trees },
+        { id: 4, component: Map },
+        { id: 5, component: Store },
+        { id: 6, component: Warehouse },
+        { id: 7, component: Landmark },
+        { id: 8, component: DraftingCompass },
+        { id: 9, component: Hotel },
+        { id: 10, component: Castle },
     ];
 
+    // Helper: ID'den İkon Bileşenini Bul
+    const getIconComponent = (iconId?: number) => {
+        const iconItem = icons.find(i => i.id === iconId);
+        return iconItem ? iconItem.component : Layers; // Bulamazsa varsayılan Layers ikonu
+    };
+
+    // Verileri Çek
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const data = await categoryService.getAllCategories();
+                setCategories(data);
+            } catch (error) {
+                console.error("Kategoriler yüklenemedi:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
+    // Silme İşlemi
+    const handleDelete = async (id: number) => {
+        if (window.confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) {
+            try {
+                await categoryService.deleteCategory(id);
+                // Başarılıysa listeden çıkar
+                setCategories(prev => prev.filter(c => c.id !== id));
+            } catch (error: any) {
+                console.error("Silme hatası:", error);
+
+                // Backend'den gelen özel mesajı yakala ve göster
+                if (error.response && error.response.data && error.response.data.message) {
+                    alert(error.response.data.message);
+                } else {
+                    alert("Silme işlemi başarısız. Lütfen tekrar deneyin.");
+                }
+            }
+        }
+    };
+
+    // Filtreleme ve Sıralama Mantığı
     const filteredCategories = categories
         .filter(cat =>
-            cat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            cat.description.toLowerCase().includes(searchQuery.toLowerCase())
+            cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (cat.description && cat.description.toLowerCase().includes(searchQuery.toLowerCase()))
         )
         .sort((a, b) => {
-            if (sortBy === 'count') return b.count - a.count;
-            return a.title.localeCompare(b.title);
+            if (sortBy === 'count') return (b.projectCount || 0) - (a.projectCount || 0);
+            return a.name.localeCompare(b.name);
         });
 
+    // Sayfalama (Pagination)
+    const ITEMS_PER_PAGE = 11; // 11 kategori + 1 "Ekle" kartı = 12 item
+    const [currentPage, setCurrentPage] = useState(1);
 
-    // Pagination Logic
-    const ITEMS_PER_PAGE = 11; // 11 categories + 1 add card = 12 items (3 rows of 4)
-    const [currentPage, setCurrentPage] = React.useState(1);
-
-    const totalItems = filteredCategories.length + 1; // +1 for the Add New Category card
+    const totalItems = filteredCategories.length + 1; // +1 "New Category" kartı için
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const currentCategories = filteredCategories.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-    // Check if "Add New" card should be on this page
-    // It takes up the slot after the last category.
-    // If the slice was full (itemsPerPage), then Add card is on next page.
-    // Actually, simpler logic:
-    // The index of "Add New" is filteredCategories.length.
-    // If this index is within [startIndex, startIndex + ITEMS_PER_PAGE), show it.
+    // "Ekle" kartının bu sayfada görünüp görünmeyeceğini hesapla
     const showAddCard = filteredCategories.length >= startIndex && filteredCategories.length < startIndex + ITEMS_PER_PAGE;
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
+    if (loading) return <div className="p-8 text-center text-zinc-500">Loading categories...</div>;
 
     return (
         <div className="flex-1 flex flex-col h-full overflow-hidden bg-zinc-50 dark:bg-[#0B0E14] transition-colors duration-500">
@@ -100,7 +129,7 @@ const AdminCategories: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
                         <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-1">Categories</h1>
-                        <p className="text-zinc-500 dark:text-slate-400 text-sm">Manage your portfolio structure. Organize projects into logical groups for better discoverability.</p>
+                        <p className="text-zinc-500 dark:text-slate-400 text-sm">Manage your portfolio structure. Organize projects into logical groups.</p>
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-3">
@@ -137,42 +166,70 @@ const AdminCategories: React.FC = () => {
             {/* Grid Content */}
             <div className="flex-1 overflow-y-auto px-8 pb-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {currentCategories.map((category) => (
-                        <div key={category.id} className="group h-64 bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-xl relative hover:border-zinc-300 dark:hover:border-[#2A303C] transition-colors flex flex-col items-center justify-center text-center cursor-pointer">
-                            <div className="absolute top-4 right-4 bg-zinc-100 dark:bg-[#1A1D27] px-2 py-1 rounded-md text-[10px] font-medium text-zinc-500 dark:text-slate-400 border border-zinc-200 dark:border-[#2A303C]">
-                                {category.count} Projects
-                            </div>
+                    {currentCategories.map((category) => {
+                        const Icon = getIconComponent(category.iconId);
 
-                            <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-[#1A1D27] flex items-center justify-center mb-4 text-zinc-600 dark:text-slate-400 transition-colors duration-300">
-                                <category.icon size={32} strokeWidth={1.5} />
-                            </div>
+                        // Debug logging to help identify data issues
+                        console.log(`Category: ${category.name}, Cover: ${category.coverImageUrl}, Count: ${category.projectCount}`);
 
-                            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-1 transition-colors">{category.title}</h3>
-                            <p className="text-sm text-zinc-500 dark:text-slate-500">{category.description}</p>
+                        return (
+                            <div key={category.id} className="group h-64 bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-xl relative hover:border-zinc-300 dark:hover:border-[#2A303C] transition-colors flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden">
 
-                            {/* Hover Overlay */}
-                            <div className="absolute inset-0 bg-white/95 dark:bg-[#0B0E14]/90 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-6">
-                                <div className="flex flex-col items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(`/admin/categories/edit/${category.id}`);
-                                        }}
-                                        className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-[#1F2430] border border-zinc-200 dark:border-[#2A303C] flex items-center justify-center text-zinc-600 dark:text-slate-400 hover:bg-zinc-900 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white hover:border-zinc-900 dark:hover:border-blue-600 transition-colors shadow-lg"
-                                    >
-                                        <PenLine size={20} />
-                                    </button>
-                                    <span className="text-xs font-medium text-zinc-600 dark:text-slate-400">Edit</span>
+                                {/* Background Image with Overlay */}
+                                {category.coverImageUrl && (
+                                    <>
+                                        <img
+                                            src={getImageUrl(category.coverImageUrl)}
+                                            alt={category.name}
+                                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                        />
+                                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
+                                    </>
+                                )}
+
+                                <div className="absolute top-4 right-4 bg-white/90 dark:bg-[#1A1D27]/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-zinc-900 dark:text-white border border-white/20 shadow-sm z-10">
+                                    {category.projectCount ?? 0} Projects
                                 </div>
-                                <div className="flex flex-col items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100">
-                                    <button className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-[#1F2430] border border-zinc-200 dark:border-[#2A303C] flex items-center justify-center text-zinc-600 dark:text-slate-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-500 dark:hover:text-white hover:border-red-500 transition-colors shadow-lg">
-                                        <Trash2 size={20} />
-                                    </button>
-                                    <span className="text-xs font-medium text-zinc-600 dark:text-slate-400">Delete</span>
+
+                                <div className="relative z-10 flex flex-col items-center">
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-3 transition-colors duration-300 ${category.coverImageUrl ? 'bg-white/20 text-white backdrop-blur-md border border-white/30' : 'bg-zinc-100 dark:bg-[#1A1D27] text-zinc-600 dark:text-slate-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/10 group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
+                                        <Icon size={28} strokeWidth={1.5} />
+                                    </div>
+
+                                    <h3 className={`text-lg font-bold mb-1 transition-colors ${category.coverImageUrl ? 'text-white' : 'text-zinc-900 dark:text-white'}`}>{category.name}</h3>
+                                    <p className={`text-sm px-4 line-clamp-2 ${category.coverImageUrl ? 'text-zinc-200' : 'text-zinc-500 dark:text-slate-500'}`}>{category.description}</p>
+                                </div>
+
+                                {/* Hover Overlay (Edit/Delete) */}
+                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-6 z-20">
+                                    <div className="flex flex-col items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/admin/categories/edit/${category.id}`);
+                                            }}
+                                            className="w-12 h-12 rounded-full bg-white text-zinc-900 hover:bg-zinc-200 transition-colors shadow-lg flex items-center justify-center"
+                                        >
+                                            <PenLine size={20} />
+                                        </button>
+                                        <span className="text-xs font-bold text-white">Edit</span>
+                                    </div>
+                                    <div className="flex flex-col items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(category.id);
+                                            }}
+                                            className="w-12 h-12 rounded-full bg-white text-red-600 hover:bg-red-50 transition-colors shadow-lg flex items-center justify-center"
+                                        >
+                                            <Trash2 size={20} />
+                                        </button>
+                                        <span className="text-xs font-bold text-white">Delete</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
 
                     {/* Add New Category Card */}
                     {showAddCard && (

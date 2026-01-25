@@ -12,28 +12,39 @@ namespace ArchiPortfolio.Application.Services
     {
         private readonly IGenericRepository<SiteSetting> _repository;
         private readonly IMapper _mapper;
+        private readonly IPhotoService _photoService;
 
-        public SiteSettingService(IGenericRepository<SiteSetting> repository, IMapper mapper)
+        public SiteSettingService(IGenericRepository<SiteSetting> repository, IMapper mapper, IPhotoService photoService)
         {
             _repository = repository;
             _mapper = mapper;
+            _photoService = photoService;
         }
 
         public async Task<SiteSettingDto> GetSettingsAsync(string langCode)
         {
             var settingsList = await _repository.GetAllAsync();
             var setting = settingsList.FirstOrDefault();
-
             if (setting == null) return null;
 
             var dto = _mapper.Map<SiteSettingDto>(setting);
 
+            // Frontend vitrini için dil çevirisi
             if (langCode == "tr")
             {
+                dto.CopyrightText = !string.IsNullOrEmpty(setting.CopyrightTextTr) ? setting.CopyrightTextTr : setting.CopyrightText;
+                dto.FooterDescription = !string.IsNullOrEmpty(setting.FooterDescriptionTr) ? setting.FooterDescriptionTr : setting.FooterDescription;
+                
                 dto.HeroTitle = !string.IsNullOrEmpty(setting.HeroTitleTr) ? setting.HeroTitleTr : setting.HeroTitle;
-                dto.AboutTitle = !string.IsNullOrEmpty(setting.AboutTitleTr) ? setting.AboutTitleTr : setting.AboutTitle;
-                dto.AboutText = !string.IsNullOrEmpty(setting.AboutTextTr) ? setting.AboutTextTr : setting.AboutText;
+                dto.HeroSubtitle = !string.IsNullOrEmpty(setting.HeroSubtitleTr) ? setting.HeroSubtitleTr : setting.HeroSubtitle;
+                dto.HeroButtonText = !string.IsNullOrEmpty(setting.HeroButtonTextTr) ? setting.HeroButtonTextTr : setting.HeroButtonText;
+
+                dto.CtaTitle = !string.IsNullOrEmpty(setting.CtaTitleTr) ? setting.CtaTitleTr : setting.CtaTitle;
+                dto.CtaDescription = !string.IsNullOrEmpty(setting.CtaDescriptionTr) ? setting.CtaDescriptionTr : setting.CtaDescription;
+                dto.CtaButtonText = !string.IsNullOrEmpty(setting.CtaButtonTextTr) ? setting.CtaButtonTextTr : setting.CtaButtonText;
+
                 dto.Address = !string.IsNullOrEmpty(setting.AddressTr) ? setting.AddressTr : setting.Address;
+                dto.MetaKeywords = !string.IsNullOrEmpty(setting.MetaKeywordsTr) ? setting.MetaKeywordsTr : setting.MetaKeywords;
             }
 
             return dto;
@@ -46,16 +57,41 @@ namespace ArchiPortfolio.Application.Services
             {
                 await _repository.AddAsync(new SiteSetting 
                 { 
-                    HeroTitle = "Welcome", 
-                    Email = "info@archi.com" 
-                    // Diğer alanlar boş kalabilir şimdilik
+                    SiteTitle = "Vivere Design",
+                    HeroTitle = "Architecture for Future", 
+                    Email = "info@vivere.design" 
                 });
                 await _repository.SaveChangesAsync();
             }
         }
 
-        public async Task UpdateSettingsAsync(SiteSetting setting)
+        public async Task UpdateSettingsAsync(UpdateSiteSettingDto dto)
         {
+            var settingsList = await _repository.GetAllAsync();
+            var setting = settingsList.FirstOrDefault();
+            
+            if (setting == null)
+            {
+                await CheckAndCreateDefaultAsync();
+                settingsList = await _repository.GetAllAsync();
+                setting = settingsList.First();
+            }
+
+            // 1. Text Alanlarını Güncelle
+            _mapper.Map(dto, setting);
+
+            // 2. Dosya Yüklemeleri (CV kaldırıldı)
+            if (dto.LogoImage != null)
+            {
+                // Eski logoyu silme işlemi opsiyonel, hata vermemesi için şimdilik koymuyorum.
+                setting.LogoUrl = await _photoService.UploadPhotoAsync(dto.LogoImage);
+            }
+
+            if (dto.HeroImage != null)
+            {
+                setting.HeroImageUrl = await _photoService.UploadPhotoAsync(dto.HeroImage);
+            }
+
             _repository.Update(setting);
             await _repository.SaveChangesAsync();
         }

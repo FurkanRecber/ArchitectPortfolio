@@ -20,6 +20,10 @@ export interface Project {
   gallery: string[];   // Normal resim URL listesi
   plans: string[];     // Mimari plan URL listesi
 
+  // Yeni Eklenen Alanlar (Dashboard Tablosu İçin)
+  createdDate?: string;
+  isPublished?: boolean;
+
   // Frontend UI için gerekli olabilecek opsiyonel alanlar (Grid yapısı vs.)
   className?: string;
 }
@@ -34,6 +38,11 @@ export interface Stat {
 export interface Category {
   id: number;
   name: string;
+  // Yeni eklenenler:
+  description?: string;
+  iconId?: number;
+  coverImageUrl?: string;
+  projectCount?: number;
 }
 
 export interface ContactMessagePayload {
@@ -52,4 +61,29 @@ export interface AuthResponse {
   accessToken: string;
   expiration: string;
   refreshToken: string;
+}
+
+export interface SiteSetting {
+  id: number;
+
+  // İngilizce
+  heroTitle: string;
+  aboutTitle: string;
+  aboutText: string;
+  address: string;
+
+  // Türkçe
+  heroTitleTr: string;
+  aboutTitleTr: string;
+  aboutTextTr: string;
+  addressTr: string;
+
+  // İletişim & Sosyal
+  email: string;
+  phone: string;
+  googleMapEmbedCode: string;
+  facebookUrl: string;
+  instagramUrl: string;
+  linkedinUrl: string;
+  youtubeUrl: string;
 }

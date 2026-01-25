@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Download } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Footer from '../components/Footer';
 import { projectService } from '../services/projectService';
 import { getImageUrl } from '../utils/imageUrlHelper'; // <-- BU IMPORT ÇOK ÖNEMLİ
@@ -137,10 +137,7 @@ const ProjectDetail: React.FC = () => {
                             <p>{project.details || project.description}</p>
                         </div>
 
-                        <button className="mt-12 flex items-center gap-3 px-6 py-4 border border-zinc-200 dark:border-white/20 rounded hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-all">
-                            <span className="text-xs font-bold uppercase tracking-widest">Download Press Kit</span>
-                            <Download size={16} />
-                        </button>
+
                     </motion.div>
 
                     {/* RIGHT: METADATA */}

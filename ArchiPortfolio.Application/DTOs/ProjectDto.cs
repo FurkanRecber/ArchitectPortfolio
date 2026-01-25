@@ -40,7 +40,6 @@ namespace ArchiPortfolio.Application.DTOs
         [JsonPropertyName("status")]
         public string Status { get; set; }
         
-        public string PressKitUrl { get; set; }
         public DateTime PublishDate { get; set; }
 
         public int CategoryId { get; set; }

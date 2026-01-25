@@ -1,39 +1,147 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-    UploadCloud,
-    Link,
-    Instagram,
-    Linkedin,
-    PenLine,
-    CheckCircle2,
-    Plus,
-    Trash2,
-    GripVertical
+    Save, Loader2, Globe, Type, MapPin, Mail, Phone,
+    Facebook, Instagram, Linkedin, Youtube,
+    UploadCloud, BarChart3, Megaphone, Video
 } from 'lucide-react';
+import { siteSettingService } from '../../services/siteSettingService';
+import { getImageUrl } from '../../utils/imageUrlHelper';
 
 const AdminSiteSettings: React.FC = () => {
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('general');
 
+    // Dosya Referansları
+    const logoInputRef = useRef<HTMLInputElement>(null);
+    const heroInputRef = useRef<HTMLInputElement>(null);
+
+    // State: Backend'deki güncel yapı (CV ve Behance yok, SEO var)
+    const [settings, setSettings] = useState<any>({
+        id: 0,
+        // General
+        siteTitle: '', logoUrl: '', copyrightText: '', copyrightTextTr: '', footerDescription: '', footerDescriptionTr: '',
+        // Hero
+        heroTitle: '', heroTitleTr: '', heroSubtitle: '', heroSubtitleTr: '', heroButtonText: '', heroButtonTextTr: '', heroImageUrl: '',
+        // CTA
+        ctaTitle: '', ctaTitleTr: '', ctaDescription: '', ctaDescriptionTr: '', ctaButtonText: '', ctaButtonTextTr: '',
+        // Studio (CV yok)
+        yearsActive: '', projectsCompleted: '', awardsWon: '', showreelUrl: '',
+        // Contact (Behance yok)
+        email: '', phone: '', address: '', addressTr: '', googleMapEmbedCode: '',
+        facebookUrl: '', instagramUrl: '', linkedinUrl: '', youtubeUrl: '',
+        // SEO
+        googleAnalyticsId: '', googleTagManagerId: '', headScripts: '', metaKeywords: '', metaKeywordsTr: '', robotsTxt: ''
+    });
+
+    // Dosya State'leri (Sadece yükleme anında kullanılır)
+    const [files, setFiles] = useState<{ logo?: File, hero?: File }>({});
+    const [previews, setPreviews] = useState<{ logo?: string, hero?: string }>({});
+
+    // Verileri Çek
+    useEffect(() => {
+        loadSettings();
+    }, []);
+
+    const loadSettings = async () => {
+        try {
+            const data = await siteSettingService.getSettings();
+            if (data) {
+                // Null değerleri boş stringe çevir
+                const safeData = Object.keys(data).reduce((acc: any, key) => {
+                    acc[key] = (data as any)[key] || '';
+                    return acc;
+                }, {});
+                setSettings(safeData);
+
+                // Mevcut resim önizlemeleri
+                if (safeData.logoUrl) setPreviews(p => ({ ...p, logo: getImageUrl(safeData.logoUrl) }));
+                if (safeData.heroImageUrl) setPreviews(p => ({ ...p, hero: getImageUrl(safeData.heroImageUrl) }));
+            }
+        } catch (error) {
+            console.error("Ayarlar yüklenemedi:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Input Değişikliği
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setSettings((prev: any) => ({ ...prev, [name]: value }));
+    };
+
+    // Dosya Seçimi
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'hero') => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setFiles(prev => ({ ...prev, [type]: file }));
+
+            // Önizleme oluştur
+            const url = URL.createObjectURL(file);
+            setPreviews(prev => ({ ...prev, [type]: url }));
+        }
+    };
+
+    // Kaydetme
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const formData = new FormData();
+
+            // Text alanlarını ekle
+            Object.keys(settings).forEach(key => {
+                if (key !== 'logoUrl' && key !== 'heroImageUrl') {
+                    // Backend büyük harf bekleyebilir, ilk harfi büyütüyoruz
+                    const keyUpper = key.charAt(0).toUpperCase() + key.slice(1);
+                    formData.append(keyUpper, settings[key]);
+                }
+            });
+
+            // Dosyaları ekle
+            if (files.logo) formData.append('LogoImage', files.logo);
+            if (files.hero) formData.append('HeroImage', files.hero);
+
+            // ID
+            formData.append('Id', settings.id.toString());
+
+            await siteSettingService.updateSettings(formData);
+            alert("Ayarlar başarıyla güncellendi! 🚀");
+
+            // Dosya inputlarını temizle
+            setFiles({});
+            if (logoInputRef.current) logoInputRef.current.value = '';
+            if (heroInputRef.current) heroInputRef.current.value = '';
+
+        } catch (error) {
+            console.error("Kaydetme hatası:", error);
+            alert("Bir hata oluştu. Lütfen konsolu kontrol edin.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) return <div className="p-8 text-center text-zinc-500">Loading configuration...</div>;
+
     const tabs = [
-        { id: 'general', label: 'GENERAL' },
-        { id: 'hero', label: 'HERO' },
-        { id: 'cta', label: 'CTA' },
-        { id: 'studio', label: 'STUDIO' },
-        { id: 'references', label: 'REFERENCES' },
-        { id: 'contact', label: 'CONTACT' },
-        { id: 'seo', label: 'SEO' }
+        { id: 'general', label: 'GENERAL & BRAND' },
+        { id: 'hero', label: 'HERO & HOME' },
+        { id: 'cta', label: 'CTA & ADS' },
+        { id: 'studio', label: 'STUDIO & METRICS' },
+        { id: 'contact', label: 'CONTACT INFO' },
+        { id: 'seo', label: 'SEO & ANALYTICS' }
     ];
 
     return (
-        <div className="flex-1 flex flex-col h-full overflow-hidden bg-zinc-50 dark:bg-black transition-colors duration-500">
-            {/* Header / Navigation Bar */}
-            <header className="px-8 py-5 border-b border-zinc-200 dark:border-[#1F2430] bg-white dark:bg-[#0B0E14] flex items-center justify-between sticky top-0 z-10 transition-colors duration-500">
-                <div className="flex items-center bg-zinc-100 dark:bg-[#151922] rounded-full p-1 border border-zinc-200 dark:border-[#1F2430]">
+        <div className="flex-1 flex flex-col h-full overflow-hidden bg-zinc-50 dark:bg-[#0B0E14] transition-colors duration-500">
+            {/* Header */}
+            <header className="px-8 py-5 border-b border-zinc-200 dark:border-[#1F2430] bg-white dark:bg-[#11141D] flex items-center justify-between sticky top-0 z-10">
+                <div className="flex items-center bg-zinc-100 dark:bg-[#151922] rounded-lg p-1 border border-zinc-200 dark:border-[#1F2430] overflow-x-auto no-scrollbar">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`px-4 py-1.5 rounded-full text-[10px] font-bold tracking-wider transition-all ${activeTab === tab.id
+                            className={`whitespace-nowrap px-4 py-2 rounded-md text-xs font-bold tracking-wider transition-all ${activeTab === tab.id
                                 ? 'bg-white dark:bg-[#1F2430] text-zinc-900 dark:text-white shadow-sm'
                                 : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
                                 }`}
@@ -42,396 +150,259 @@ const AdminSiteSettings: React.FC = () => {
                         </button>
                     ))}
                 </div>
-                <div className="flex items-center gap-4">
-                    <span className="text-xs text-zinc-500 dark:text-zinc-500">Discard</span>
-                    <button className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-xs font-bold tracking-wide transition-colors shadow-[0_0_20px_rgba(37,99,235,0.3)]">
-                        Publish Changes
-                    </button>
-                </div>
+                <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold tracking-wide transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-70"
+                >
+                    {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                    {saving ? 'SAVING...' : 'PUBLISH CHANGES'}
+                </button>
             </header>
 
-            {/* Main Content */}
+            {/* Content */}
             <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                <div className="max-w-3xl mx-auto pb-20">
-                    {activeTab === 'general' && <GeneralSection />}
-                    {activeTab === 'hero' && <HeroSection />}
-                    {activeTab === 'cta' && <CtaSection />}
-                    {activeTab === 'studio' && <StudioSection />}
-                    {activeTab === 'references' && <ReferencesSection />}
-                    {activeTab === 'contact' && <ContactSection />}
-                    {activeTab === 'seo' && <SeoSection />}
+                <div className="max-w-5xl mx-auto space-y-8 pb-20">
+
+                    {/* --- 1. GENERAL & BRAND --- */}
+                    {activeTab === 'general' && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div className="md:col-span-2 space-y-6">
+                                    <SectionHeader title="Brand Identity" icon={Globe} />
+                                    <InputGroup label="Site Title (Browser Tab)" name="siteTitle" value={settings.siteTitle} onChange={handleChange} />
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <TextAreaGroup label="Footer Desc (EN)" name="footerDescription" value={settings.footerDescription} onChange={handleChange} rows={3} />
+                                        <TextAreaGroup label="Footer Desc (TR)" name="footerDescriptionTr" value={settings.footerDescriptionTr} onChange={handleChange} rows={3} />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <InputGroup label="Copyright (EN)" name="copyrightText" value={settings.copyrightText} onChange={handleChange} />
+                                        <InputGroup label="Copyright (TR)" name="copyrightTextTr" value={settings.copyrightTextTr} onChange={handleChange} />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <SectionHeader title="Logo" icon={UploadCloud} />
+                                    <div
+                                        onClick={() => logoInputRef.current?.click()}
+                                        className="border-2 border-dashed border-zinc-300 dark:border-[#2A303C] rounded-xl bg-zinc-50 dark:bg-[#1A1D27] h-48 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-100 dark:hover:bg-[#1F2430] transition-colors relative overflow-hidden group"
+                                    >
+                                        {previews.logo ? (
+                                            <img src={previews.logo} alt="Logo" className="w-full h-full object-contain p-4" />
+                                        ) : (
+                                            <div className="text-center text-zinc-400">
+                                                <UploadCloud size={32} className="mx-auto mb-2" />
+                                                <span className="text-xs">Upload Logo</span>
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
+                                            Change Logo
+                                        </div>
+                                    </div>
+                                    <input type="file" ref={logoInputRef} onChange={(e) => handleFileChange(e, 'logo')} className="hidden" accept="image/*" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- 2. HERO & HOME --- */}
+                    {activeTab === 'hero' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <SectionHeader title="Hero Section Configuration" icon={Type} />
+
+                            {/* Hero Image */}
+                            <div className="bg-white dark:bg-[#151922] p-6 rounded-xl border border-zinc-200 dark:border-[#1F2430] space-y-4">
+                                <label className="text-xs font-bold text-zinc-500 uppercase">Hero Background Image</label>
+                                <div
+                                    onClick={() => heroInputRef.current?.click()}
+                                    className="w-full h-64 rounded-lg bg-zinc-100 dark:bg-[#0B0E14] border-2 border-dashed border-zinc-300 dark:border-[#2A303C] flex items-center justify-center cursor-pointer overflow-hidden relative group"
+                                >
+                                    {previews.hero ? (
+                                        <img src={previews.hero} alt="Hero" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="text-zinc-400 flex flex-col items-center">
+                                            <UploadCloud size={40} />
+                                            <span className="mt-2 text-sm">Click to upload large hero image</span>
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold">Change Image</div>
+                                </div>
+                                <input type="file" ref={heroInputRef} onChange={(e) => handleFileChange(e, 'hero')} className="hidden" accept="image/*" />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <InputGroup label="Main Title (EN)" name="heroTitle" value={settings.heroTitle} onChange={handleChange} />
+                                <InputGroup label="Main Title (TR)" name="heroTitleTr" value={settings.heroTitleTr} onChange={handleChange} />
+
+                                <InputGroup label="Subtitle (EN)" name="heroSubtitle" value={settings.heroSubtitle} onChange={handleChange} />
+                                <InputGroup label="Subtitle (TR)" name="heroSubtitleTr" value={settings.heroSubtitleTr} onChange={handleChange} />
+
+                                <InputGroup label="Button Text (EN)" name="heroButtonText" value={settings.heroButtonText} onChange={handleChange} />
+                                <InputGroup label="Button Text (TR)" name="heroButtonTextTr" value={settings.heroButtonTextTr} onChange={handleChange} />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- 3. CTA & ADS --- */}
+                    {activeTab === 'cta' && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <SectionHeader title="Call to Action (Footer Area)" icon={Megaphone} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <InputGroup label="Title (EN)" name="ctaTitle" value={settings.ctaTitle} onChange={handleChange} />
+                                <InputGroup label="Title (TR)" name="ctaTitleTr" value={settings.ctaTitleTr} onChange={handleChange} />
+
+                                <TextAreaGroup label="Description (EN)" name="ctaDescription" value={settings.ctaDescription} onChange={handleChange} rows={2} />
+                                <TextAreaGroup label="Description (TR)" name="ctaDescriptionTr" value={settings.ctaDescriptionTr} onChange={handleChange} rows={2} />
+
+                                <InputGroup label="Button Label (EN)" name="ctaButtonText" value={settings.ctaButtonText} onChange={handleChange} />
+                                <InputGroup label="Button Label (TR)" name="ctaButtonTextTr" value={settings.ctaButtonTextTr} onChange={handleChange} />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- 4. STUDIO & METRICS (CV YOK) --- */}
+                    {activeTab === 'studio' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <SectionHeader title="Key Metrics & Files" icon={BarChart3} />
+
+                            <div className="grid grid-cols-3 gap-6">
+                                <InputGroup label="Years Active" name="yearsActive" value={settings.yearsActive} onChange={handleChange} placeholder="e.g. 12" />
+                                <InputGroup label="Projects Done" name="projectsCompleted" value={settings.projectsCompleted} onChange={handleChange} placeholder="e.g. 140+" />
+                                <InputGroup label="Awards Won" name="awardsWon" value={settings.awardsWon} onChange={handleChange} placeholder="e.g. 25" />
+                            </div>
+
+                            <div className="bg-white dark:bg-[#151922] p-6 rounded-xl border border-zinc-200 dark:border-[#1F2430]">
+                                <h4 className="font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2"><Video size={18} /> Showreel Video</h4>
+
+                                <InputGroup label="Showreel URL (Vimeo/Youtube)" name="showreelUrl" value={settings.showreelUrl} onChange={handleChange} placeholder="https://vimeo.com/..." />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- 5. CONTACT (Behance YOK) --- */}
+                    {activeTab === 'contact' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <SectionHeader title="Contact Information" icon={MapPin} />
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <InputGroup label="Email" name="email" value={settings.email} onChange={handleChange} icon={Mail} />
+                                <InputGroup label="Phone" name="phone" value={settings.phone} onChange={handleChange} icon={Phone} />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <TextAreaGroup label="Address (EN)" name="address" value={settings.address} onChange={handleChange} rows={3} />
+                                <TextAreaGroup label="Address (TR)" name="addressTr" value={settings.addressTr} onChange={handleChange} rows={3} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-zinc-500 uppercase">Google Maps Embed Code</label>
+                                <textarea
+                                    name="googleMapEmbedCode"
+                                    value={settings.googleMapEmbedCode}
+                                    onChange={handleChange}
+                                    rows={3}
+                                    className="w-full bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg px-4 py-3 text-sm text-zinc-900 dark:text-white focus:border-blue-500 outline-none font-mono"
+                                />
+                            </div>
+
+                            <div className="pt-6">
+                                <SectionHeader title="Social Media" icon={Globe} />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <InputGroup label="Instagram" name="instagramUrl" value={settings.instagramUrl} onChange={handleChange} icon={Instagram} />
+                                    <InputGroup label="LinkedIn" name="linkedinUrl" value={settings.linkedinUrl} onChange={handleChange} icon={Linkedin} />
+                                    <InputGroup label="Facebook" name="facebookUrl" value={settings.facebookUrl} onChange={handleChange} icon={Facebook} />
+                                    <InputGroup label="YouTube" name="youtubeUrl" value={settings.youtubeUrl} onChange={handleChange} icon={Youtube} />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- 6. SEO & ANALYTICS --- */}
+                    {activeTab === 'seo' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <SectionHeader title="SEO Configuration" icon={BarChart3} />
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <InputGroup label="Google Analytics ID (G-XXXX)" name="googleAnalyticsId" value={settings.googleAnalyticsId} onChange={handleChange} />
+                                <InputGroup label="Google Tag Manager ID (GTM-XXXX)" name="googleTagManagerId" value={settings.googleTagManagerId} onChange={handleChange} />
+                            </div>
+
+                            <div className="space-y-4">
+                                <InputGroup label="Meta Keywords (EN)" name="metaKeywords" value={settings.metaKeywords} onChange={handleChange} placeholder="architecture, design, modern..." />
+                                <InputGroup label="Meta Keywords (TR)" name="metaKeywordsTr" value={settings.metaKeywordsTr} onChange={handleChange} placeholder="mimarlık, tasarım, modern..." />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-zinc-500 uppercase">Custom Head Scripts</label>
+                                <textarea
+                                    name="headScripts"
+                                    value={settings.headScripts}
+                                    onChange={handleChange}
+                                    rows={5}
+                                    placeholder="<script>...</script>"
+                                    className="w-full bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg p-3 font-mono text-xs text-zinc-600 dark:text-zinc-300 focus:border-blue-500 outline-none"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-zinc-500 uppercase">Robots.txt Content</label>
+                                <textarea
+                                    name="robotsTxt"
+                                    value={settings.robotsTxt}
+                                    onChange={handleChange}
+                                    rows={4}
+                                    placeholder="User-agent: *"
+                                    className="w-full bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg p-3 font-mono text-xs text-zinc-600 dark:text-zinc-300 focus:border-blue-500 outline-none"
+                                />
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             </div>
         </div>
     );
 };
 
-// --- Sections ---
+// --- Helper Components ---
+const SectionHeader = ({ title, icon: Icon }: { title: string, icon: any }) => (
+    <div className="flex items-center gap-2 pb-2 border-b border-zinc-200 dark:border-[#1F2430]">
+        <Icon size={18} className="text-blue-600 dark:text-blue-400" />
+        <h3 className="text-lg font-bold text-zinc-900 dark:text-white">{title}</h3>
+    </div>
+);
 
-const GeneralSection = () => (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <SectionHeader title="General Information" />
-
-        <div className="bg-white dark:bg-[#0f1115] border border-zinc-200 dark:border-[#1F2430] rounded-xl p-8 space-y-8 shadow-sm dark:shadow-none transition-colors duration-500">
-            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-300 border-b border-zinc-100 dark:border-[#1F2430] pb-4">Brand Identity</h3>
-
-            <div className="space-y-2">
-                <Label>Site Title</Label>
-                <Input defaultValue="Vivere Design Portfolio" />
-            </div>
-
-            <div className="space-y-2">
-                <Label>Logo Upload</Label>
-                <div className="h-40 border border-dashed border-zinc-300 dark:border-[#1F2430] bg-zinc-50 dark:bg-[#151922] rounded-lg flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors cursor-pointer group">
-                    <div className="p-3 bg-white dark:bg-[#1F2430] rounded-lg mb-3 group-hover:scale-110 transition-transform shadow-sm dark:shadow-none">
-                        <UploadCloud size={20} />
-                    </div>
-                    <span className="text-xs">Drag logo here</span>
+const InputGroup = ({ label, name, value, onChange, placeholder, icon: Icon }: any) => (
+    <div className="space-y-2">
+        <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wide">{label}</label>
+        <div className="relative">
+            {Icon && (
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                    <Icon size={16} />
                 </div>
-            </div>
-        </div>
-
-        <div className="bg-white dark:bg-[#0f1115] border border-zinc-200 dark:border-[#1F2430] rounded-xl p-8 space-y-8 shadow-sm dark:shadow-none transition-colors duration-500">
-            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-300 border-b border-zinc-100 dark:border-[#1F2430] pb-4">Footer Settings</h3>
-
-            <div className="space-y-2">
-                <Label>Copyright Text</Label>
-                <Input defaultValue="© 2024 Vivere Design. All rights reserved." />
-            </div>
-
-            <div className="space-y-2">
-                <Label>Footer Description</Label>
-                <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg">
-                    <span className="text-sm text-zinc-600 dark:text-zinc-400">Crafting digital spaces that inspire...</span>
-                    <span className="px-3 py-1 bg-white dark:bg-[#1F2430] border border-zinc-200 dark:border-[#2A303C] rounded-full text-[10px] text-green-600 dark:text-green-400 flex items-center gap-1.5 shadow-sm dark:shadow-none">
-                        <CheckCircle2 size={10} />
-                        All systems operational
-                    </span>
-                </div>
-            </div>
+            )}
+            <input
+                type="text"
+                name={name}
+                value={value || ''}
+                onChange={onChange}
+                placeholder={placeholder}
+                className={`w-full bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg px-4 py-3 text-sm text-zinc-900 dark:text-white focus:border-blue-500 outline-none transition-colors ${Icon ? 'pl-10' : ''}`}
+            />
         </div>
     </div>
 );
 
-const HeroSection = () => (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <SectionHeader title="Hero & Home" icon={true} />
-
-        <div className="bg-white dark:bg-[#0f1115] border border-zinc-200 dark:border-[#1F2430] rounded-xl p-8 space-y-8 shadow-sm dark:shadow-none transition-colors duration-500">
-            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-300 border-b border-zinc-100 dark:border-[#1F2430] pb-4">Main Experience</h3>
-
-            <div className="space-y-2">
-                <Label>Main Headline</Label>
-                <Input defaultValue="Architecture for the Future" />
-            </div>
-
-            <div className="space-y-2">
-                <Label>Sub-headline</Label>
-                <div className="p-4 bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg text-sm text-zinc-600 dark:text-zinc-400">
-                    We design spaces that blend sustainable innovation with timeless aesthetics.
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <Label>Hero Image Preview</Label>
-                <div className="h-48 rounded-lg overflow-hidden border border-zinc-200 dark:border-[#1F2430] relative group">
-                    <img src="https://source.unsplash.com/random/800x400?architecture,modern" alt="Hero" className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="px-4 py-2 bg-white/90 dark:bg-black/50 backdrop-blur text-zinc-900 dark:text-white text-xs rounded-lg border border-white/10 shadow-lg">Change Image</button>
-                    </div>
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <Label>CTA Button Text</Label>
-                <Input defaultValue="View Projects" />
-            </div>
-        </div>
-    </div>
-);
-
-const CtaSection = () => (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <SectionHeader title="Global CTA" icon={true} />
-
-        <div className="bg-white dark:bg-[#0f1115] border border-zinc-200 dark:border-[#1F2430] rounded-xl p-8 space-y-8 shadow-sm dark:shadow-none transition-colors duration-500">
-            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-300 border-b border-zinc-100 dark:border-[#1F2430] pb-4">Conversion Section</h3>
-
-            <div className="space-y-2">
-                <Label>Headline</Label>
-                <Input defaultValue="Ready to Build Your Vision?" />
-            </div>
-
-            <div className="space-y-2">
-                <Label>Subtext</Label>
-                <div className="p-4 bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg text-sm text-zinc-600 dark:text-zinc-400">
-                    Let's discuss your next project and how we can help bring it to life.
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <Label>Button Label</Label>
-                <Input defaultValue="Start a Conversation" />
-            </div>
-        </div>
-    </div>
-);
-
-const StudioSection = () => (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <SectionHeader title="Studio & Files" icon={true} />
-
-        <div className="bg-white dark:bg-[#0f1115] border border-zinc-200 dark:border-[#1F2430] rounded-xl p-8 space-y-8 shadow-sm dark:shadow-none transition-colors duration-500">
-            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-300 border-b border-zinc-100 dark:border-[#1F2430] pb-4">Key Metrics</h3>
-
-            <div className="grid grid-cols-3 gap-4">
-                <div className="p-6 bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg transition-colors duration-500">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-2">YEARS ACTIVE</span>
-                    <span className="text-3xl font-serif text-zinc-900 dark:text-white">12</span>
-                </div>
-                <div className="p-6 bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg transition-colors duration-500">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-2">PROJECTS</span>
-                    <span className="text-3xl font-serif text-zinc-900 dark:text-white">145</span>
-                </div>
-                <div className="p-6 bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg transition-colors duration-500">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-2">AWARDS</span>
-                    <span className="text-3xl font-serif text-zinc-900 dark:text-white">23</span>
-                </div>
-            </div>
-
-            <div className="pt-4 space-y-6">
-                <h4 className="text-base text-zinc-500 dark:text-zinc-400">Assets</h4>
-
-                <div className="space-y-2">
-                    <Label>PDF Resume/CV</Label>
-                    <div className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg transition-colors duration-500">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500 rounded flex items-center justify-center">
-                                <span className="text-[10px] font-bold">PDF</span>
-                            </div>
-                            <div>
-                                <p className="text-xs font-medium text-zinc-900 dark:text-zinc-200">Vivere_CV_2024.pdf</p>
-                                <p className="text-[10px] text-zinc-500">2.4 MB • Updated 2 days ago</p>
-                            </div>
-                        </div>
-                        <button className="px-3 py-1 bg-white dark:bg-[#1F2430] hover:bg-zinc-100 dark:hover:bg-[#2A303C] text-[10px] font-bold text-zinc-600 dark:text-zinc-300 rounded border border-zinc-200 dark:border-[#2A303C] transition-colors shadow-sm dark:shadow-none">Replace</button>
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Showreel Video URL</Label>
-                    <Input defaultValue="https://vimeo.com/12345678" icon={Link} />
-                </div>
-            </div>
-        </div>
-    </div>
-);
-
-const ReferencesSection = () => {
-    const [clients, setClients] = useState([
-        { id: 1, name: 'Aesop', style: 'font-serif tracking-tight text-3xl md:text-4xl' },
-        { id: 2, name: 'Herman Miller', style: 'font-sans font-bold tracking-tight uppercase text-lg md:text-xl' },
-        { id: 3, name: 'Vitra.', style: 'font-serif font-bold text-2xl md:text-3xl tracking-tighter' },
-        { id: 4, name: 'Bang & Olufsen', style: 'font-sans font-light tracking-[0.2em] uppercase text-xs md:text-sm' },
-        { id: 5, name: 'MONOCLE', style: 'font-serif font-bold text-xl md:text-2xl tracking-wide bg-black text-white px-2 py-1 dark:bg-white dark:text-black' },
-    ]);
-
-    const handleRemove = (id: number) => {
-        setClients(prev => prev.filter(c => c.id !== id));
-    };
-
-    const handleAdd = () => {
-        const newId = Math.max(...clients.map(c => c.id)) + 1;
-        setClients([...clients, { id: newId, name: 'New Client', style: 'font-sans text-xl' }]);
-    };
-
-    return (
-        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <SectionHeader title="Trusted References" icon={true} />
-
-            <div className="bg-white dark:bg-[#0f1115] border border-zinc-200 dark:border-[#1F2430] rounded-xl p-8 space-y-8 shadow-sm dark:shadow-none transition-colors duration-500">
-                <div className="flex items-center justify-between border-b border-zinc-100 dark:border-[#1F2430] pb-4">
-                    <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-300">Client List</h3>
-                    <button
-                        onClick={handleAdd}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-semibold hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
-                    >
-                        <Plus size={14} />
-                        Add Client
-                    </button>
-                </div>
-
-                <div className="space-y-3">
-                    {clients.map((client) => (
-                        <div key={client.id} className="flex items-center gap-4 p-4 bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-xl group transition-colors">
-                            <div className="text-zinc-400 cursor-grab active:cursor-grabbing hover:text-zinc-600 dark:hover:text-zinc-200">
-                                <GripVertical size={16} />
-                            </div>
-
-                            <div className="flex-1 grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <Label>Client Name</Label>
-                                    <input
-                                        type="text"
-                                        value={client.name}
-                                        onChange={(e) => {
-                                            const newName = e.target.value;
-                                            setClients(prev => prev.map(c => c.id === client.id ? { ...c, name: newName } : c));
-                                        }}
-                                        className="w-full bg-white dark:bg-[#0B0E14] border border-zinc-200 dark:border-[#2A303C] rounded px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <Label>Style Classes (Tailwind)</Label>
-                                    <input
-                                        type="text"
-                                        value={client.style}
-                                        onChange={(e) => {
-                                            const newStyle = e.target.value;
-                                            setClients(prev => prev.map(c => c.id === client.id ? { ...c, style: newStyle } : c));
-                                        }}
-                                        className="w-full bg-white dark:bg-[#0B0E14] border border-zinc-200 dark:border-[#2A303C] rounded px-3 py-2 text-xs font-mono text-zinc-600 dark:text-zinc-400 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Preview */}
-                            <div className="hidden md:flex items-center justify-center w-32 h-16 bg-white dark:bg-black rounded border border-zinc-100 dark:border-[#1F2430] overflow-hidden">
-                                <span className={`${client.style} origin-center scale-50 whitespace-nowrap`}>{client.name}</span>
-                            </div>
-
-                            <button
-                                onClick={() => handleRemove(client.id)}
-                                className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
-                            >
-                                <Trash2 size={16} />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-
-const ContactSection = () => (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <SectionHeader title="Contact Info" icon={true} />
-
-        <div className="bg-white dark:bg-[#0f1115] border border-zinc-200 dark:border-[#1F2430] rounded-xl p-8 space-y-8 shadow-sm dark:shadow-none transition-colors duration-500">
-            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-300 border-b border-zinc-100 dark:border-[#1F2430] pb-4">Direct Contact</h3>
-
-            <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <Label>Email Address</Label>
-                    <Input defaultValue="hello@vivere.design" />
-                </div>
-                <div className="space-y-2">
-                    <Label>Phone Number</Label>
-                    <Input defaultValue="+1 (555) 000-0000" />
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <Label>Physical Address</Label>
-                <div className="p-4 bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg text-sm text-zinc-600 dark:text-zinc-300 h-24">
-                    123 Architecture Ave, Suite 400<br />New York, NY 10001
-                </div>
-            </div>
-
-            <div className="pt-6 space-y-6">
-                <h4 className="text-lg font-medium text-zinc-900 dark:text-zinc-300 border-b border border-zinc-100 dark:border-[#1F2430] pb-4 border-t-0 border-l-0 border-r-0">Social Media</h4>
-
-                <div className="space-y-2">
-                    <Label>Instagram</Label>
-                    <Input defaultValue="instagram.com/vivere" icon={Instagram} />
-                </div>
-                <div className="space-y-2">
-                    <Label>LinkedIn</Label>
-                    <Input defaultValue="linkedin.com/company/vivere" icon={Linkedin} />
-                </div>
-                <div className="space-y-2">
-                    <Label>Behance</Label>
-                    <Input defaultValue="behance.net/vivere" icon={PenLine} />
-                </div>
-            </div>
-        </div>
-    </div>
-);
-
-const SeoSection = () => (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <SectionHeader title="SEO & Integrations" icon={true} />
-
-        <div className="bg-white dark:bg-[#0f1115] border border-zinc-200 dark:border-[#1F2430] rounded-xl p-8 space-y-8 shadow-sm dark:shadow-none transition-colors duration-500">
-            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-300 border-b border-zinc-100 dark:border-[#1F2430] pb-4">Analytics Keys</h3>
-
-            <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <Label>Google Analytics ID</Label>
-                    <Input defaultValue="G-X123456789" />
-                </div>
-                <div className="space-y-2">
-                    <Label>Tag Manager ID</Label>
-                    <Input defaultValue="GTM-9876543" />
-                </div>
-            </div>
-
-            <div className="pt-6 space-y-6">
-                <h4 className="text-lg font-medium text-zinc-900 dark:text-zinc-300 border-b border-zinc-100 dark:border-[#1F2430] pb-4">Custom Code</h4>
-
-                <div className="space-y-2">
-                    <div className="flex justify-between">
-                        <Label>Head Scripts</Label>
-                        <span className="text-[10px] text-blue-600 dark:text-blue-500 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-500/20">INJECT &lt;HEAD&gt;</span>
-                    </div>
-                    <div className="h-32 bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg p-3 font-mono text-xs text-zinc-600 dark:text-zinc-400">
-                        &lt;script&gt;<br />&nbsp;&nbsp;console.log('Custom script loaded');<br />&lt;/script&gt;
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Meta Keywords</Label>
-                    <Input defaultValue="architecture, design, modern, portfolio, sustainable" />
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Robots.txt Content</Label>
-                    <div className="h-24 bg-zinc-50 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg p-3 font-mono text-xs text-zinc-600 dark:text-zinc-400">
-                        User-agent: *<br />Allow: /<br />Sitemap: https://viveredesign.com/sitemap.xml
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-);
-
-
-// --- Shared Components ---
-
-const SectionHeader = ({ title, icon }: { title: string, icon?: boolean }) => (
-    <div className="flex items-center gap-3 mb-6 transition-colors duration-500">
-        {icon && <div className="w-5 h-5 bg-zinc-200 dark:bg-[#1F2430] rounded flex items-center justify-center text-zinc-500 dark:text-zinc-500 text-[10px] font-bold">#</div>}
-        <h2 className="text-xl font-serif text-zinc-900 dark:text-white tracking-wide">{title}</h2>
-    </div>
-);
-
-const Label = ({ children }: { children: React.ReactNode }) => (
-    <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-wider block pl-1">{children}</label>
-);
-
-const Input = ({ defaultValue, icon: Icon }: { defaultValue: string, icon?: React.ElementType }) => (
-    <div className="relative group transition-colors duration-500">
-        {Icon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-focus-within:text-zinc-800 dark:group-focus-within:text-white transition-colors">
-                <Icon size={14} />
-            </div>
-        )}
-        <input
-            type="text"
-            defaultValue={defaultValue}
-            className={`w-full bg-zinc-50 dark:bg-[#151922] text-zinc-900 dark:text-white border border-zinc-200 dark:border-[#1F2430] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-sm dark:shadow-none placeholder-zinc-400 ${Icon ? 'pl-9' : ''} font-medium rounded-lg`}
+const TextAreaGroup = ({ label, name, value, onChange, rows }: any) => (
+    <div className="space-y-2">
+        <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wide">{label}</label>
+        <textarea
+            name={name}
+            value={value || ''}
+            onChange={onChange}
+            rows={rows}
+            className="w-full bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg px-4 py-3 text-sm text-zinc-900 dark:text-white focus:border-blue-500 outline-none transition-colors resize-none"
         />
     </div>
 );

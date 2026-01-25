@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using ArchiPortfolio.Application.DTOs;
 using ArchiPortfolio.Application.Interfaces.Services;
-using ArchiPortfolio.Domain.Entities;
 
 namespace ArchiPortfolio.API.Controllers
 {
@@ -19,18 +19,17 @@ namespace ArchiPortfolio.API.Controllers
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] string lang = "en")
         {
-            // Önce ayar var mı diye bak, yoksa oluştur (Seed mantığı)
             await _service.CheckAndCreateDefaultAsync();
-            
             var result = await _service.GetSettingsAsync(lang);
             return Ok(result);
         }
 
+        // DEĞİŞİKLİK: [FromForm] ve UpdateSiteSettingDto
         [HttpPut]
-        public async Task<IActionResult> Update([FromBody] SiteSetting setting)
+        public async Task<IActionResult> Update([FromForm] UpdateSiteSettingDto settingDto)
         {
-            await _service.UpdateSettingsAsync(setting);
-            return Ok(new { message = "Ayarlar güncellendi." });
+            await _service.UpdateSettingsAsync(settingDto);
+            return Ok(new { message = "Site ayarları başarıyla güncellendi." });
         }
     }
 }
