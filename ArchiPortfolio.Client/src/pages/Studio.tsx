@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Ruler, Smile, Download, Play, Compass, Leaf, PenTool } from 'lucide-react';
+import { Building2, Ruler, Smile, Play, Compass, Leaf, PenTool } from 'lucide-react';
 import Footer from '../components/Footer';
 
 const Studio: React.FC = () => {
@@ -161,15 +161,14 @@ const Studio: React.FC = () => {
                         Deepen your understanding <br /> of our craft.
                     </h2>
 
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <button className="flex items-center gap-3 px-8 py-4 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white border border-zinc-200 dark:border-white/10 hover:border-accent-600 transition-colors shadow-lg">
-                            <Download size={16} />
-                            <span className="text-xs font-bold uppercase tracking-widest">Download Portfolio (PDF)</span>
+                    <div className="flex flex-col items-center justify-center gap-8">
+                        <button className="group relative flex h-24 w-24 items-center justify-center rounded-full bg-zinc-900 text-white shadow-2xl transition-all duration-500 hover:scale-110 hover:shadow-accent-600/20 dark:bg-white dark:text-black">
+                            <Play size={32} fill="currentColor" className="ml-1" />
+                            <span className="absolute inset-0 -z-10 rounded-full border border-zinc-900/10 dark:border-white/10 transition-all duration-700 group-hover:scale-150 group-hover:opacity-0"></span>
                         </button>
-                        <button className="flex items-center gap-3 px-8 py-4 bg-zinc-900 dark:bg-white text-white dark:text-black border border-transparent hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-lg">
-                            <Play size={16} fill="currentColor" />
-                            <span className="text-xs font-bold uppercase tracking-widest">Watch Our Process (Video)</span>
-                        </button>
+                        <span className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                            Watch Our Process
+                        </span>
                     </div>
                 </div>
             </section>

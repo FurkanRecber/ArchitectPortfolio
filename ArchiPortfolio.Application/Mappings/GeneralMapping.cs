@@ -1,7 +1,7 @@
 using AutoMapper;
 using ArchiPortfolio.Domain.Entities;
 using ArchiPortfolio.Application.DTOs;
-using System.Linq; // Select ve Where için gerekli
+using System.Linq;
 
 namespace ArchiPortfolio.Application.Mappings
 {
@@ -9,28 +9,34 @@ namespace ArchiPortfolio.Application.Mappings
     {
         public GeneralMapping()
         {
+            // ProjectImage -> ProjectImageDto
             CreateMap<ProjectImage, ProjectImageDto>();
             
+            // Project -> ProjectDto
             CreateMap<Project, ProjectDto>()
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name))
                 
-                // Galeri: IsPlan FALSE olanların sadece URL'lerini al
+                // CoverImageUrl isimleri aynı olduğu için OTOMATİK eşleşir, yazmaya gerek yok.
+
+                // Galeri: IsPlan FALSE olanlar
                 .ForMember(dest => dest.Gallery, opt => opt.MapFrom(src => 
                     src.ProjectImages
                         .Where(img => !img.IsPlan)
                         .Select(img => img.ImageUrl)
                         .ToList()))
                        
-                // Planlar: IsPlan TRUE olanların sadece URL'lerini al
+                // Planlar: IsPlan TRUE olanlar
                 .ForMember(dest => dest.Plans, opt => opt.MapFrom(src => 
                     src.ProjectImages
                         .Where(img => img.IsPlan)
                         .Select(img => img.ImageUrl)
                         .ToList()));
 
+            // Diğer Eşleşmeler
             CreateMap<Category, CategoryDto>();
             CreateMap<Service, ServiceDto>();
             CreateMap<TeamMember, TeamMemberDto>();
+            CreateMap<ContactMessage, ContactMessageDto>().ReverseMap();
             CreateMap<ContactMessage, CreateContactMessageDto>().ReverseMap();
             CreateMap<SiteSetting, SiteSettingDto>();
         }

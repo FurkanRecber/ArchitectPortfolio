@@ -11,7 +11,8 @@ export const projectService = {
         return response.data;
     },
 
-    getProjectById: async (id: string, lang: string = 'en'): Promise<Project> => {
+    // DÜZELTME BURADA: id tipini 'number' olarak değiştirdik (veya string de gelebilir diye esnettik)
+    getProjectById: async (id: number | string, lang: string = 'en'): Promise<Project> => {
         const response = await axios.get(`${API_URL}/${id}?lang=${lang}`);
         return response.data;
     },

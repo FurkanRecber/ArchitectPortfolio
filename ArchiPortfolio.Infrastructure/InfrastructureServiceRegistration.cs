@@ -10,7 +10,8 @@ namespace ArchiPortfolio.Infrastructure
         {
             // Program.cs'den taşınan resim servisi
             services.AddScoped<IPhotoService, LocalPhotoService>();
-
+            services.AddScoped<IEmailService, SmtpEmailService>();
+            
             return services;
         }
     }

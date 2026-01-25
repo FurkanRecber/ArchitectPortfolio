@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Download, Grid } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Download } from 'lucide-react';
 import Footer from '../components/Footer';
 import { projectService } from '../services/projectService';
+import { getImageUrl } from '../utils/imageUrlHelper'; // <-- BU IMPORT ÇOK ÖNEMLİ
 import type { Project } from '../types';
 
 const ProjectDetail: React.FC = () => {
@@ -22,8 +23,8 @@ const ProjectDetail: React.FC = () => {
 
             setLoading(true);
             try {
-                // Backend'den veriyi çekiyoruz
-                const data = await projectService.getProjectById(id);
+                // Backend'den veriyi çekiyoruz (ID'yi sayıya çeviriyoruz)
+                const data = await projectService.getProjectById(Number(id));
                 setProject(data);
                 setError(null);
             } catch (err) {
@@ -62,8 +63,7 @@ const ProjectDetail: React.FC = () => {
         );
     }
 
-    // Sonraki proje için basit bir mantık (Mevcut ID + 1)
-    // Not: Gerçek senaryoda backend'den "NextProjectId" dönmek daha sağlıklıdır.
+    // Sonraki proje için basit bir mantık
     const nextProjectId = parseInt(id || "0") + 1;
 
     return (
@@ -75,8 +75,8 @@ const ProjectDetail: React.FC = () => {
                     initial={{ scale: 1.1 }}
                     animate={{ scale: 1 }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
-                    // Backend'den gelen resim URL'si
-                    src={project.coverImageUrl}
+                    // DÜZELTME: Helper fonksiyonunu ve doğru alan ismini kullanıyoruz
+                    src={getImageUrl(project.coverImageUrl)}
                     alt={project.title}
                     className="w-full h-full object-cover"
                 />
@@ -132,7 +132,7 @@ const ProjectDetail: React.FC = () => {
                         className="lg:col-span-7"
                     >
                         <h3 className="text-2xl font-bold mb-8 text-zinc-900 dark:text-white">Concept</h3>
-                        <div className="text-zinc-600 dark:text-zinc-400 leading-relaxed space-y-6 text-lg font-light transition-colors">
+                        <div className="text-zinc-600 dark:text-zinc-400 leading-relaxed space-y-6 text-lg font-light transition-colors whitespace-pre-line">
                             {/* Backend'den gelen uzun detay metni */}
                             <p>{project.details || project.description}</p>
                         </div>
@@ -183,7 +183,7 @@ const ProjectDetail: React.FC = () => {
                 </div>
 
                 {/* 3. GALLERY GRID */}
-                {/* project.gallery artık string[] olduğu için direkt mapleyebiliriz */}
+                {/* DÜZELTME: Galeri resimleri için helper kullanımı */}
                 {project.gallery && project.gallery.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-32">
                         {project.gallery.map((imgUrl, idx) => (
@@ -195,57 +195,32 @@ const ProjectDetail: React.FC = () => {
                                 transition={{ duration: 0.6, delay: idx * 0.1 }}
                                 className={`overflow-hidden rounded-lg ${idx === 0 ? 'md:col-span-2 aspect-[2/1]' : 'aspect-square'}`}
                             >
-                                <img src={imgUrl} alt={`${project.title} detail ${idx}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                                <img
+                                    src={getImageUrl(imgUrl)} // Helper burada
+                                    alt={`${project.title} detail ${idx}`}
+                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                                />
                             </motion.div>
                         ))}
                     </div>
                 )}
             </div>
 
-            {/* 4. ARCHITECTURAL PLANS */}
-            {/* project.plans Backend'den IsPlan=true olanlar olarak geliyor */}
-            <section className="bg-zinc-50 dark:bg-zinc-900 py-32 px-6 md:px-16 border-t border-zinc-200 dark:border-white/5 transition-colors duration-500">
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex justify-between items-center mb-16">
-                        <h3 className="text-xl font-bold text-zinc-900 dark:text-white">Architectural Plans</h3>
-                        <Grid size={20} className="text-zinc-400 dark:text-zinc-500" />
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                        {project.plans && project.plans.length > 0 ? (
-                            project.plans.map((planUrl, idx) => (
-                                <motion.div
-                                    key={idx}
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    whileInView={{ opacity: 1, scale: 1 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.6 }}
-                                    className="bg-white dark:bg-zinc-950 p-8 rounded border border-zinc-200 dark:border-white/5 shadow-sm"
-                                >
-                                    <span className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-6">Plan View {idx + 1}</span>
-                                    <img
-                                        src={planUrl}
-                                        alt="Plan"
-                                        className="w-full h-auto opacity-90 hover:opacity-100 transition-opacity dark:invert"
-                                    />
-                                </motion.div>
-                            ))
-                        ) : (
-                            <div className="col-span-full text-center py-20 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-white/5 rounded">
-                                <p className="text-zinc-500">No architectural plans available for this project.</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </section>
 
             {/* 5. NEXT PROJECT FOOTER */}
             <section className="py-32 px-6 md:px-16 text-center bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-white/5 transition-colors duration-500">
                 <span className="text-xs font-bold uppercase tracking-widest text-accent-600 mb-4 block">Continue Exploring</span>
-                <h2 className="text-4xl md:text-6xl font-bold mb-8 text-zinc-900 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors cursor-pointer" onClick={() => navigate(`/work/${nextProjectId}`)}>
+                <h2
+                    className="text-4xl md:text-6xl font-bold mb-8 text-zinc-900 dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/work/${nextProjectId}`)}
+                >
                     Next Project
                 </h2>
-                <button onClick={() => navigate(`/work/${nextProjectId}`)} className="p-4 rounded-full border border-zinc-200 dark:border-white/20 text-zinc-900 dark:text-white hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-all">
+                <button
+                    onClick={() => navigate(`/work/${nextProjectId}`)}
+                    className="p-4 rounded-full border border-zinc-200 dark:border-white/20 text-zinc-900 dark:text-white hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-black transition-all"
+                >
                     <ArrowRight size={24} />
                 </button>
             </section>

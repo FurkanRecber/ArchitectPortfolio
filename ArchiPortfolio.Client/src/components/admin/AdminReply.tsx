@@ -12,69 +12,50 @@ import {
     Send,
     X
 } from 'lucide-react';
+import { contactService } from '../../services/contactService';
 
 const AdminReply: React.FC = () => {
     const navigate = useNavigate();
     const { id } = useParams();
 
-    // Mock Data State
+    // State
     const [message, setMessage] = useState<any>(null);
     const [replySubject, setReplySubject] = useState('');
     const [replyBody, setReplyBody] = useState('');
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Mock Messages Database (Should ideally be shared or fetched)
-        const mockMessages = [
-            {
-                id: 1,
-                name: 'Elena Fisher',
-                email: 'elena.fisher@example.com',
-                avatar: 'https://source.unsplash.com/random/100x100?woman,portrait',
-                subject: 'Villa Renovation in Hollywood Hills',
-                content: `Hi Team,
+        const fetchMessage = async () => {
+            if (!id) return;
 
-I'm looking for an architect for a comprehensive villa renovation in the hills. We've been following your work for a while and absolutely love the minimal style you bring to residential projects. 
+            try {
+                // Burada id'yi loglayalım (konsol yok ama en azından kodda kalsın)
+                console.log("Fetching message with ID:", id);
 
-We are looking to start the design phase next month and would love to discuss feasibility and timelines. Our key priorities are:
-• Maximizing natural light in the living area
-• Sustainable material selection
-• Preserving the original mid-century structure
+                const data = await contactService.getMessageById(Number(id));
 
-Could we schedule a call for sometime next week?`
-            },
-            {
-                id: 2,
-                name: 'Marcus Thorne',
-                email: 'marcus.thorne@example.com',
-                avatar: 'https://source.unsplash.com/random/100x100?man,portrait',
-                subject: 'Senior Architect Position',
-                content: 'Attached is my portfolio for the Senior Architect position...'
-            },
-            {
-                id: 3,
-                name: 'Sarah Jenkins',
-                email: 'sarah.jenkins@example.com',
-                avatar: 'https://source.unsplash.com/random/100x100?woman,glasses',
-                subject: 'Downtown Loft Project',
-                content: 'Thank you for the quick response regarding the downtown loft project...'
-            },
-            {
-                id: 4,
-                name: 'David Chen',
-                email: 'david.chen@example.com',
-                avatar: 'https://source.unsplash.com/random/100x100?man,suit',
-                subject: 'Office Space Design',
-                content: 'Hello, we are planning a new office space in the financial district...'
+                if (!data) {
+                    throw new Error("No data returned from API");
+                }
+
+                setMessage({
+                    id: data.id,
+                    name: data.senderName || 'Unknown',
+                    email: data.email,
+                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.senderName || 'U')}&background=random`,
+                    subject: data.subject || 'No Subject',
+                    content: data.message || ''
+                });
+
+                setReplySubject(`Re: ${data.subject || 'Inquiry'}`);
+                setReplyBody(`Dear ${data.senderName ? data.senderName.split(' ')[0] : 'Sir/Madam'},\n\nThank you for reaching out to Vivere Design.\n\nBest regards,\nVivere Team`);
+            } catch (err: any) {
+                console.error("Failed to fetch message details:", err);
+                setError(err.message || "Failed to load message");
             }
-        ];
+        };
 
-        const foundMessage = mockMessages.find(m => m.id === Number(id));
-
-        if (foundMessage) {
-            setMessage(foundMessage);
-            setReplySubject(`Re: ${foundMessage.subject}`);
-            setReplyBody(`Dear ${foundMessage.name.split(' ')[0]},\n\nThank you for reaching out to Vivere Design.\n\nBest regards,\nVivere Team`);
-        }
+        fetchMessage();
     }, [id]);
 
     const handleSendReply = () => {
@@ -85,14 +66,13 @@ Could we schedule a call for sometime next week?`
 
     const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
-
     const insertFormat = (format: string) => {
         const textarea = textareaRef.current;
         if (!textarea) return;
 
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        const text = textarea.value; // Use textarea.value directly for most current state during event
+        const text = textarea.value;
         const before = text.substring(0, start);
         const selection = text.substring(start, end);
         const after = text.substring(end);
@@ -133,7 +113,6 @@ Could we schedule a call for sometime next week?`
                 }
                 break;
             case 'list':
-                // Check if we are at the beginning of a line, if not add newline
                 const prefix = (start === 0 || text[start - 1] === '\n') ? '- ' : '\n- ';
                 newText = `${before}${prefix}${selection}${after}`;
                 newCursorStart = start + prefix.length;
@@ -144,8 +123,6 @@ Could we schedule a call for sometime next week?`
                 newCursorStart = start + 1;
                 newCursorEnd = end + 1;
                 if (!selection) {
-                    // [|](url) -> Select 'url' maybe? Or just sit inside []?
-                    // Let's sit inside []
                     newCursorEnd = newCursorStart;
                 }
                 break;
@@ -159,14 +136,7 @@ Could we schedule a call for sometime next week?`
                 break;
         }
 
-        // Programmatically update the state
-        // This is important because React's state update is async
-        // We set the value directly to ensure selection range works, but also update state
         setReplyBody(newText);
-
-        // We need to wait for React to re-render to set selection, 
-        // OR we just manually set the value ref and selection now if we want it instant (but state sync is key)
-        // Best approach for controlled inputs: update state, then use useEffect/layoutEffect or setTimeout to restore cursor
 
         setTimeout(() => {
             textarea.focus();
@@ -174,7 +144,20 @@ Could we schedule a call for sometime next week?`
         }, 0);
     };
 
-    if (!message) return <div className="p-8 text-zinc-500">Message not found or loading...</div>;
+    if (error) {
+        return (
+            <div className="p-8 flex flex-col items-center justify-center text-red-500 h-full">
+                <p className="font-bold mb-2">Error loading message</p>
+                <p className="text-sm text-zinc-500">{error}</p>
+                <div className="mt-4 text-xs text-zinc-400">Message ID: {id}</div>
+                <button onClick={() => navigate('/admin/messages')} className="mt-6 px-4 py-2 bg-zinc-100 rounded hover:bg-zinc-200 text-zinc-800 transition-colors">
+                    Back to Messages
+                </button>
+            </div>
+        );
+    }
+
+    if (!message) return <div className="p-8 text-zinc-500 h-full flex items-center justify-center">Loading message...</div>;
 
     return (
         <div className="flex-1 flex flex-col h-full overflow-hidden bg-zinc-50 dark:bg-[#0B0E14] transition-colors duration-500">

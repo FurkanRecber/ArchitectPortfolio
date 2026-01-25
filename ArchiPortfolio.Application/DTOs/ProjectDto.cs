@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization; // Bu kütüphane şart
+using System.Text.Json.Serialization;
 
 namespace ArchiPortfolio.Application.DTOs
 {
@@ -18,8 +18,8 @@ namespace ArchiPortfolio.Application.DTOs
 
         public string Details { get; set; }
 
-        // Frontend 'imageUrl' bekliyor (Kapak resmi)
-        [JsonPropertyName("imageUrl")] 
+        // DÜZELTME: Frontend 'coverImageUrl' bekliyor, 'imageUrl' değil!
+        [JsonPropertyName("coverImageUrl")] 
         public string CoverImageUrl { get; set; }
         
         [JsonPropertyName("client")]
@@ -28,11 +28,9 @@ namespace ArchiPortfolio.Application.DTOs
         [JsonPropertyName("location")]
         public string Location { get; set; }
         
-        // Frontend 'team' bekliyor
         [JsonPropertyName("team")]
         public string ProjectTeam { get; set; }
         
-        // Frontend 'year' bekliyor
         [JsonPropertyName("year")]
         public string ProjectYear { get; set; }
         
@@ -47,17 +45,12 @@ namespace ArchiPortfolio.Application.DTOs
 
         public int CategoryId { get; set; }
 
-        // Frontend 'category' diye tek bir string bekliyor
         [JsonPropertyName("category")]
         public string CategoryName { get; set; } 
 
-        // --- YENİ EKLENEN LİSTELER ---
-        
-        // Normal resimler buraya (IsPlan = false olanlar)
         [JsonPropertyName("gallery")]
         public List<string> Gallery { get; set; } 
 
-        // Mimari planlar buraya (IsPlan = true olanlar)
         [JsonPropertyName("plans")]
         public List<string> Plans { get; set; }
     }

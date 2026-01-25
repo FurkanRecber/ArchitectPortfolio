@@ -75,8 +75,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                     ]);
                     // Son 5 projeyi al
                     setDashboardProjects(projectsData.slice(0, 5));
-                    // Okunmamış mesaj sayısı (Şimdilik toplam sayıyı alıyoruz, backend'de status varsa filtreleyebilirsin)
-                    setMessagesCount(messagesData.length);
+                    // Okunmamış mesaj sayısı
+                    setMessagesCount(messagesData.filter((m: any) => !m.isRead).length);
                 } catch (error) {
                     console.error("Dashboard verileri yüklenemedi:", error);
                 } finally {
@@ -166,7 +166,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                         activeTab === 'categories' ? <AdminCategories /> :
                             activeTab === 'categories-new' || activeTab === 'categories-edit' ? <AdminNewCategory /> :
                                 activeTab === 'site-settings' ? <AdminSiteSettings /> :
-                                    activeTab === 'messages' ? <AdminMessages messages={[]} /> : // Mesajları AdminMessages içinde çekeceğiz
+                                    activeTab === 'messages' ? <AdminMessages /> :
                                         activeTab === 'messages-reply' ? <AdminReply /> :
 
                                             /* DEFAULT DASHBOARD VIEW */
