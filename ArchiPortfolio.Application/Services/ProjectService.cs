@@ -19,29 +19,33 @@ namespace ArchiPortfolio.Application.Services
 
         public async Task<List<ProjectDto>> GetAllProjectsAsync(string langCode)
         {
-            // GÜNCELLEME: ProjectImages ve Category tablolarını da Include ettik
-            var projects = await _repository.GetAllAsync(
-                x => x.ProjectImages, 
-                x => x.Category
-            );
-
+            // Category tablosunu dahil et (Include)
+            var projects = await _repository.GetAllAsync(x => x.Category); 
+    
             var dtos = new List<ProjectDto>();
 
-            foreach (var project in projects)
+            foreach (var p in projects)
             {
-                var dto = _mapper.Map<ProjectDto>(project);
+                var dto = _mapper.Map<ProjectDto>(p);
+        
+                // Kategori ismi dil kontrolü (Opsiyonel, eğer kategori isimleri de çevriliyorsa)
+                if (p.Category != null)
+                {
+                    dto.CategoryName = (langCode == "tr" && !string.IsNullOrEmpty(p.Category.NameTr)) 
+                        ? p.Category.NameTr 
+                        : p.Category.Name;
+                }
+
+                // Proje dili kontrolü
                 if (langCode == "tr")
                 {
-                    dto.Title = !string.IsNullOrEmpty(project.TitleTr) ? project.TitleTr : project.Title;
-                    dto.Description = !string.IsNullOrEmpty(project.DescriptionTr) ? project.DescriptionTr : project.Description;
-                    dto.Details = !string.IsNullOrEmpty(project.DetailsTr) ? project.DetailsTr : project.Details;
-                    dto.Client = !string.IsNullOrEmpty(project.ClientTr) ? project.ClientTr : project.Client;
-                    dto.Location = !string.IsNullOrEmpty(project.LocationTr) ? project.LocationTr : project.Location;
-                    dto.ProjectTeam = !string.IsNullOrEmpty(project.ProjectTeamTr) ? project.ProjectTeamTr : project.ProjectTeam;
+                    dto.Title = !string.IsNullOrEmpty(p.TitleTr) ? p.TitleTr : p.Title;
+                    dto.Description = !string.IsNullOrEmpty(p.DescriptionTr) ? p.DescriptionTr : p.Description;
                 }
+        
                 dtos.Add(dto);
             }
-            return dtos.OrderByDescending(x => x.PublishDate).ToList();
+            return dtos;
         }
 
         public async Task<ProjectDto> GetProjectByIdAsync(int id, string langCode)

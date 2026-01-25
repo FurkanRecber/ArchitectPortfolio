@@ -26,6 +26,7 @@ import AdminReply from '../components/admin/AdminReply';
 import { authService } from '../services/authService';
 import { projectService } from '../services/projectService';
 import { contactService } from '../services/contactService';
+import { categoryService } from '../services/categoryService';
 import type { Project } from '../types';
 
 interface AdminDashboardProps {
@@ -44,6 +45,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
     // Veri State'leri (Dashboard Özeti İçin)
     const [dashboardProjects, setDashboardProjects] = useState<Project[]>([]);
     const [messagesCount, setMessagesCount] = useState(0);
+    const [categoriesCount, setCategoriesCount] = useState(0);
     const [, setLoading] = useState(true); // Loading used in fetchStats logic but not in UI directly? Should check usage.
     // Actually error says 'loading' is unused. 'setLoading' is used.
     // So let's keep setLoading but ignore loading: const [, setLoading] = useState(true);
@@ -75,14 +77,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
             const fetchStats = async () => {
                 try {
                     setLoading(true);
-                    const [projectsData, messagesData] = await Promise.all([
+                    const [projectsData, messagesData, categoriesData] = await Promise.all([
                         projectService.getAllProjects(),
-                        contactService.getAllMessages()
+                        contactService.getAllMessages(),
+                        categoryService.getAllCategories()
                     ]);
                     // Son 5 projeyi al
                     setDashboardProjects(projectsData.slice(0, 5));
                     // Okunmamış mesaj sayısı
                     setMessagesCount(messagesData.filter((m: any) => !m.isRead).length);
+                    // Kategori sayısı
+                    setCategoriesCount(categoriesData.length);
                 } catch (error) {
                     console.error("Dashboard verileri yüklenemedi:", error);
                 } finally {
@@ -111,9 +116,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
 
     // İstatistik Kartları Verisi
     const stats = [
-        { title: 'Total Projects', value: dashboardProjects.length.toString(), change: 'Live', changeText: 'on website', changeColor: 'text-green-500', icon: Folder, iconColor: 'text-blue-500' },
+        { title: 'Total Projects', value: dashboardProjects.length.toString(), change: 'Live', changeText: 'on website', changeColor: 'text-green-500', icon: FolderOpen, iconColor: 'text-blue-500' },
         { title: 'Total Messages', value: messagesCount.toString(), change: 'Inbox', changeText: 'received', changeColor: 'text-zinc-500', icon: MessageSquare, iconColor: 'text-orange-500' },
-        { title: 'Total Views', value: '12.5k', change: '+12%', changeText: 'this week', changeColor: 'text-green-500', icon: Eye, iconColor: 'text-indigo-500' },
+        { title: 'Total Categories', value: categoriesCount.toString(), change: 'Active', changeText: 'in system', changeColor: 'text-purple-500', icon: Folder, iconColor: 'text-purple-500' },
     ];
 
     return (
@@ -190,7 +195,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                                                             </div>
                                                             <div className="flex items-center text-xs">
                                                                 <span className={`${stat.changeColor} font-medium mr-2 bg-green-500/10 px-1.5 py-0.5 rounded`}>{stat.change}</span>
-                                                                <span className="text-zinc-600 dark:text-slate-500">{stat.changeText}</span>
                                                             </div>
                                                         </div>
                                                     ))}
