@@ -65,16 +65,16 @@ const App: React.FC = () => {
           <Route path="/studio" element={<Studio />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin/login" element={<AdminLogin darkMode={darkMode} />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
-          <Route path="/admin/projects" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
-          <Route path="/admin/projects/new" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
-          <Route path="/admin/projects/edit/:id" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
-          <Route path="/admin/categories" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
-          <Route path="/admin/categories/new" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
-          <Route path="/admin/categories/edit/:id" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
-          <Route path="/admin/site-settings" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
-          <Route path="/admin/messages" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
-          <Route path="/admin/messages/reply/:id" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
+          <Route path="/admin/projects" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
+          <Route path="/admin/projects/new" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
+          <Route path="/admin/projects/edit/:id" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
+          <Route path="/admin/categories" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
+          <Route path="/admin/categories/new" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
+          <Route path="/admin/categories/edit/:id" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
+          <Route path="/admin/site-settings" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
+          <Route path="/admin/messages" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
+          <Route path="/admin/messages/reply/:id" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
           <Route path="/work/:id" element={<ProjectDetail />} />
         </Routes>
       </main>

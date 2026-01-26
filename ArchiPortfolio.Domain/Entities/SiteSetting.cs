@@ -53,13 +53,32 @@ namespace ArchiPortfolio.Domain.Entities
         public string AboutTitleTr { get; set; }
         public string AboutDescription { get; set; }
         public string AboutDescriptionTr { get; set; }
-        public string PhilosophyIconUrl { get; set; }
         public string AboutImageUrl { get; set; } // Yanındaki Resim
         
-        public string PhilosophyTitle { get; set; }
-        public string PhilosophyTitleTr { get; set; }
-        public string PhilosophyDescription { get; set; }
-        public string PhilosophyDescriptionTr { get; set; }
+        // Bölümün Genel Başlığı (Örn: "Our Core Values")
+        public string PhilosophySectionTitle { get; set; } 
+        public string PhilosophySectionTitleTr { get; set; }
+
+        // Madde 1
+        public string Philo1Title { get; set; }
+        public string Philo1TitleTr { get; set; }
+        public string Philo1Desc { get; set; }
+        public string Philo1DescTr { get; set; }
+        public string Philo1IconUrl { get; set; }
+
+        // Madde 2
+        public string Philo2Title { get; set; }
+        public string Philo2TitleTr { get; set; }
+        public string Philo2Desc { get; set; }
+        public string Philo2DescTr { get; set; }
+        public string Philo2IconUrl { get; set; }
+
+        // Madde 3
+        public string Philo3Title { get; set; }
+        public string Philo3TitleTr { get; set; }
+        public string Philo3Desc { get; set; }
+        public string Philo3DescTr { get; set; }
+        public string Philo3IconUrl { get; set; }
         
         // Showreel videosu kalsın
         public string ShowreelUrl { get; set; }

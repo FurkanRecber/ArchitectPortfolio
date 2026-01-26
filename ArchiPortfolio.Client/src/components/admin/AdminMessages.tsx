@@ -6,7 +6,6 @@ import {
     Reply,
     Archive,
     Trash2,
-    CheckCircle2,
     ArrowDown
 } from 'lucide-react';
 import { contactService } from '../../services/contactService'; // Servisi import et
@@ -34,8 +33,8 @@ const AdminMessages: React.FC = () => {
     const [filter, setFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
+    const [visibleCount, setVisibleCount] = useState(5);
 
-    // DÜZELTME BURADA: Verileri Backend'den Çek
     useEffect(() => {
         const fetchMessages = async () => {
             try {
@@ -109,7 +108,6 @@ const AdminMessages: React.FC = () => {
         let matchesTab = false;
         if (filter === 'all') matchesTab = msg.status !== 'archived';
         else if (filter === 'unread') matchesTab = msg.status === 'unread';
-        else if (filter === 'requests') matchesTab = msg.type === 'New Inquiry' && msg.status !== 'archived';
         else if (filter === 'archived') matchesTab = msg.status === 'archived';
 
         if (!matchesTab) return false;
@@ -145,17 +143,19 @@ const AdminMessages: React.FC = () => {
                             type="text"
                             placeholder="Search by sender, keyword or project type..."
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setVisibleCount(5);
+                            }}
                             className="w-full bg-zinc-100 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg pl-10 pr-4 py-2.5 text-sm text-zinc-900 dark:text-slate-200 focus:outline-none focus:border-zinc-300 dark:focus:border-[#2A303C] placeholder-zinc-400 dark:placeholder-slate-600"
                         />
                     </div>
 
                     {/* Filter Tabs */}
                     <div className="flex items-center bg-zinc-100 dark:bg-[#151922] rounded-lg p-1 border border-zinc-200 dark:border-[#1F2430]">
-                        <FilterTab label="All Messages" active={filter === 'all'} onClick={() => setFilter('all')} />
-                        <FilterTab label="Unread" count={messages.filter(m => m.status === 'unread').length} active={filter === 'unread'} onClick={() => setFilter('unread')} />
-                        <FilterTab label="Project Requests" active={filter === 'requests'} onClick={() => setFilter('requests')} />
-                        <FilterTab label="Archived" active={filter === 'archived'} onClick={() => setFilter('archived')} />
+                        <FilterTab label="All Messages" active={filter === 'all'} onClick={() => { setFilter('all'); setVisibleCount(5); }} />
+                        <FilterTab label="Unread" count={messages.filter(m => m.status === 'unread').length} active={filter === 'unread'} onClick={() => { setFilter('unread'); setVisibleCount(5); }} />
+                        <FilterTab label="Archived" active={filter === 'archived'} onClick={() => { setFilter('archived'); setVisibleCount(5); }} />
                     </div>
                 </div>
             </div>
@@ -165,7 +165,7 @@ const AdminMessages: React.FC = () => {
                 {filteredMessages.length === 0 ? (
                     <div className="text-center py-10 text-zinc-400">No messages found.</div>
                 ) : (
-                    filteredMessages.map((msg) => (
+                    filteredMessages.slice(0, visibleCount).map((msg) => (
                         <div
                             key={msg.id}
                             className={`bg-white dark:bg-[#151922] border rounded-2xl transition-all duration-300 overflow-hidden ${activeMessageId === msg.id
@@ -188,19 +188,9 @@ const AdminMessages: React.FC = () => {
                                 <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                                     <div className="col-span-3">
                                         <h3 className="font-semibold text-zinc-900 dark:text-white truncate">{msg.name}</h3>
-                                        <p className={`text-xs uppercase tracking-wider font-bold ${msg.typeColor}`}>
-                                            {msg.type === 'Replied' && <CheckCircle2 size={12} className="inline mr-1" />}
-                                            {msg.type}
-                                        </p>
                                     </div>
 
-                                    <div className="col-span-2">
-                                        <span className="inline-block px-3 py-1 rounded-md bg-zinc-100 dark:bg-[#1F2430] border border-zinc-200 dark:border-[#2A303C] text-xs text-zinc-600 dark:text-slate-400 font-medium">
-                                            {msg.projectType}
-                                        </span>
-                                    </div>
-
-                                    <div className="col-span-6">
+                                    <div className="col-span-8">
                                         {activeMessageId !== msg.id && (
                                             <p className="text-sm text-zinc-500 dark:text-slate-500 truncate">{msg.preview}</p>
                                         )}
@@ -258,10 +248,15 @@ const AdminMessages: React.FC = () => {
                     )))}
 
                 <div className="flex justify-center py-4">
-                    <button className="flex items-center gap-2 text-sm text-zinc-500 dark:text-slate-500 hover:text-zinc-800 dark:hover:text-slate-300 transition-colors">
-                        <span>Load more messages</span>
-                        <ArrowDown size={14} />
-                    </button>
+                    {filteredMessages.length > visibleCount && (
+                        <button
+                            onClick={() => setVisibleCount(prev => prev + 5)}
+                            className="flex items-center gap-2 text-sm text-zinc-500 dark:text-slate-500 hover:text-zinc-800 dark:hover:text-slate-300 transition-colors"
+                        >
+                            <span>Load more messages</span>
+                            <ArrowDown size={14} />
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

@@ -39,8 +39,9 @@ namespace ArchiPortfolio.Application.Mappings
                 .ForMember(dest => dest.LogoUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.HeroImageUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.AboutImageUrl, opt => opt.Ignore())
-                // --- YENİ ---
-                .ForMember(dest => dest.PhilosophyIconUrl, opt => opt.Ignore());
+                .ForMember(dest => dest.Philo1IconUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.Philo2IconUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.Philo3IconUrl, opt => opt.Ignore());
 
             // --- CONTACT & OTHERS ---
             CreateMap<ContactMessage, ContactMessageDto>()

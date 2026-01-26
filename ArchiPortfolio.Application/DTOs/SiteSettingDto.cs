@@ -53,11 +53,26 @@ namespace ArchiPortfolio.Application.DTOs
         public string AboutImageUrl { get; set; } // URL
 
         // C. Felsefe (Philosophy)
-        public string PhilosophyTitle { get; set; }
-        public string PhilosophyTitleTr { get; set; }
-        public string PhilosophyDescription { get; set; }
-        public string PhilosophyDescriptionTr { get; set; }
-        public string PhilosophyIconUrl { get; set; } // URL
+        public string PhilosophySectionTitle { get; set; }
+        public string PhilosophySectionTitleTr { get; set; }
+
+        public string Philo1Title { get; set; }
+        public string Philo1TitleTr { get; set; }
+        public string Philo1Desc { get; set; }
+        public string Philo1DescTr { get; set; }
+        public string Philo1IconUrl { get; set; } // URL
+
+        public string Philo2Title { get; set; }
+        public string Philo2TitleTr { get; set; }
+        public string Philo2Desc { get; set; }
+        public string Philo2DescTr { get; set; }
+        public string Philo2IconUrl { get; set; } // URL
+
+        public string Philo3Title { get; set; }
+        public string Philo3TitleTr { get; set; }
+        public string Philo3Desc { get; set; }
+        public string Philo3DescTr { get; set; }
+        public string Philo3IconUrl { get; set; }
 
         // D. Video
         public string ShowreelUrl { get; set; }

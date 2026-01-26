@@ -16,6 +16,9 @@ const AdminSiteSettings: React.FC = () => {
     const logoInputRef = useRef<HTMLInputElement>(null);
     const heroInputRef = useRef<HTMLInputElement>(null);
     const aboutInputRef = useRef<HTMLInputElement>(null);
+    const philo1Ref = useRef<HTMLInputElement>(null);
+    const philo2Ref = useRef<HTMLInputElement>(null);
+    const philo3Ref = useRef<HTMLInputElement>(null);
 
     // State: Backend'deki güncel yapı (CV ve Behance yok, SEO var)
     const [settings, setSettings] = useState<any>({
@@ -47,14 +50,20 @@ const AdminSiteSettings: React.FC = () => {
     const [files, setFiles] = useState<{
         logo?: File;
         hero?: File;
-        about?: File;           // YENİ
+        about?: File;
+        philo1Icon?: File;
+        philo2Icon?: File;
+        philo3Icon?: File;
     }>({});
 
     // Önizleme State'i (Ekranda görünecekler)
     const [previews, setPreviews] = useState<{
         logo?: string;
         hero?: string;
-        about?: string;           // YENİ
+        about?: string;
+        philo1Icon?: string;
+        philo2Icon?: string;
+        philo3Icon?: string;
     }>({});
 
     // Verileri Çek
@@ -77,6 +86,9 @@ const AdminSiteSettings: React.FC = () => {
                 if (safeData.logoUrl) setPreviews(p => ({ ...p, logo: getImageUrl(safeData.logoUrl) }));
                 if (safeData.heroImageUrl) setPreviews(p => ({ ...p, hero: getImageUrl(safeData.heroImageUrl) }));
                 if (safeData.aboutImageUrl) setPreviews(p => ({ ...p, about: getImageUrl(safeData.aboutImageUrl) }));
+                if (safeData.philo1IconUrl) setPreviews(p => ({ ...p, philo1Icon: getImageUrl(safeData.philo1IconUrl) }));
+                if (safeData.philo2IconUrl) setPreviews(p => ({ ...p, philo2Icon: getImageUrl(safeData.philo2IconUrl) }));
+                if (safeData.philo3IconUrl) setPreviews(p => ({ ...p, philo3Icon: getImageUrl(safeData.philo3IconUrl) }));
             }
         } catch (error) {
             console.error("Ayarlar yüklenemedi:", error);
@@ -122,6 +134,9 @@ const AdminSiteSettings: React.FC = () => {
             if (files.logo) formData.append('LogoImage', files.logo);
             if (files.hero) formData.append('HeroImage', files.hero);
             if (files.about) formData.append('AboutImage', files.about);
+            if (files.philo1Icon) formData.append('Philo1Icon', files.philo1Icon);
+            if (files.philo2Icon) formData.append('Philo2Icon', files.philo2Icon);
+            if (files.philo3Icon) formData.append('Philo3Icon', files.philo3Icon);
 
             // ID
             formData.append('Id', settings.id.toString());
@@ -327,15 +342,69 @@ const AdminSiteSettings: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* B. FELSEFE (PHILOSOPHY - "Driven by Integrity") */}
+                            {/* B. FELSEFE (MADDELİ YAPI) */}
                             <div className="space-y-6 pt-6 border-t border-zinc-200 dark:border-[#1F2430]">
-                                <SectionHeader title="Philosophy Section (Driven by Integrity)" icon={Globe} />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <InputGroup label="Section Title (EN)" name="philosophyTitle" value={settings.philosophyTitle} onChange={handleChange} />
-                                    <InputGroup label="Section Title (TR)" name="philosophyTitleTr" value={settings.philosophyTitleTr} onChange={handleChange} />
+                                <SectionHeader title="Philosophy & Values" icon={Globe} />
 
-                                    <TextAreaGroup label="Text (EN)" name="philosophyDescription" value={settings.philosophyDescription} onChange={handleChange} rows={3} />
-                                    <TextAreaGroup label="Text (TR)" name="philosophyDescriptionTr" value={settings.philosophyDescriptionTr} onChange={handleChange} rows={3} />
+                                {/* Bölüm Başlığı */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 bg-zinc-100 dark:bg-[#1A1D27] p-4 rounded-xl">
+                                    <InputGroup label="Section Main Title (EN)" name="philosophySectionTitle" value={settings.philosophySectionTitle} onChange={handleChange} placeholder="e.g. Driven by Integrity" />
+                                    <InputGroup label="Section Main Title (TR)" name="philosophySectionTitleTr" value={settings.philosophySectionTitleTr} onChange={handleChange} />
+                                </div>
+
+                                {/* Maddeler (Loop) */}
+                                <div className="grid gap-6">
+                                    {[1, 2, 3].map((num) => {
+                                        const iconRef = num === 1 ? philo1Ref : num === 2 ? philo2Ref : philo3Ref;
+                                        const previewKey = `philo${num}Icon` as keyof typeof previews;
+
+                                        return (
+                                            <div key={num} className="p-6 bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-xl relative group hover:border-blue-500/30 transition-colors">
+                                                <span className="absolute top-4 right-4 text-[10px] font-bold text-zinc-300 dark:text-zinc-600 bg-zinc-100 dark:bg-[#1A1D27] px-2 py-1 rounded">ITEM {num}</span>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                                                    {/* İkon */}
+                                                    <div className="md:col-span-2 flex flex-col gap-2">
+                                                        <label className="text-[10px] font-bold text-zinc-500 uppercase">Icon</label>
+                                                        <div
+                                                            onClick={() => iconRef.current?.click()}
+                                                            className="aspect-square rounded-lg border-2 border-dashed border-zinc-300 dark:border-[#2A303C] flex items-center justify-center cursor-pointer hover:bg-zinc-50 dark:hover:bg-[#1F2430] relative overflow-hidden"
+                                                        >
+                                                            {previews[previewKey] ? (
+                                                                <img src={previews[previewKey]} className="w-10 h-10 object-contain" />
+                                                            ) : (
+                                                                <UploadCloud size={20} className="text-zinc-400" />
+                                                            )}
+                                                        </div>
+                                                        <input
+                                                            type="file"
+                                                            ref={iconRef}
+                                                            onChange={(e) => {
+                                                                if (e.target.files?.[0]) {
+                                                                    const file = e.target.files[0];
+                                                                    setFiles(p => ({ ...p, [`philo${num}Icon`]: file }));
+                                                                    setPreviews(p => ({ ...p, [`philo${num}Icon`]: URL.createObjectURL(file) }));
+                                                                }
+                                                            }}
+                                                            className="hidden" accept="image/*"
+                                                        />
+                                                    </div>
+
+                                                    {/* Metinler */}
+                                                    <div className="md:col-span-10 grid gap-4">
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <InputGroup label={`Title (EN)`} name={`philo${num}Title`} value={settings[`philo${num}Title`]} onChange={handleChange} />
+                                                            <InputGroup label={`Title (TR)`} name={`philo${num}TitleTr`} value={settings[`philo${num}TitleTr`]} onChange={handleChange} />
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <TextAreaGroup label={`Desc (EN)`} name={`philo${num}Desc`} value={settings[`philo${num}Desc`]} onChange={handleChange} rows={2} />
+                                                            <TextAreaGroup label={`Desc (TR)`} name={`philo${num}DescTr`} value={settings[`philo${num}DescTr`]} onChange={handleChange} rows={2} />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
 

@@ -32,9 +32,11 @@ import type { Project } from '../types';
 interface AdminDashboardProps {
     darkMode: boolean;
     toggleDarkMode: () => void;
+    language: 'EN' | 'TR';
+    toggleLanguage: () => void;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMode }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMode, language, toggleLanguage }) => {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -164,6 +166,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                 <header className="h-16 border-b border-zinc-200 dark:border-[#1F2430] bg-white dark:bg-[#11141D] flex items-center justify-between px-8 transition-colors duration-500">
                     <h2 className="text-lg font-medium text-zinc-900 dark:text-slate-100 capitalize">{activeTab.replace('-', ' ')}</h2>
                     <div className="flex items-center gap-6">
+                        <button onClick={toggleLanguage} className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-[#1A1D27] transition-colors text-zinc-600 dark:text-slate-300">
+                            <Globe size={18} />
+                            <span className="text-xs font-bold">{language}</span>
+                        </button>
                         <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-[#1A1D27] transition-colors">
                             {darkMode ? <Sun size={20} className="text-slate-400" /> : <Moon size={20} className="text-zinc-500" />}
                         </button>

@@ -60,13 +60,29 @@ namespace ArchiPortfolio.Application.DTOs
         public IFormFile? AboutImage { get; set; }
 
         // C. Felsefe (Philosophy - "Driven by Integrity")
-        public string PhilosophyTitle { get; set; }
-        public string PhilosophyTitleTr { get; set; }
-        public string PhilosophyDescription { get; set; }
-        public string PhilosophyDescriptionTr { get; set; }
-        
-        // Felsefe İkonu (Dosya) - YENİ
-        public IFormFile? PhilosophyIcon { get; set; }
+        public string PhilosophySectionTitle { get; set; }
+        public string PhilosophySectionTitleTr { get; set; }
+
+        // Madde 1
+        public string Philo1Title { get; set; }
+        public string Philo1TitleTr { get; set; }
+        public string Philo1Desc { get; set; }
+        public string Philo1DescTr { get; set; }
+        public IFormFile? Philo1Icon { get; set; } // Dosya
+
+        // Madde 2
+        public string Philo2Title { get; set; }
+        public string Philo2TitleTr { get; set; }
+        public string Philo2Desc { get; set; }
+        public string Philo2DescTr { get; set; }
+        public IFormFile? Philo2Icon { get; set; } // Dosya
+
+        // Madde 3
+        public string Philo3Title { get; set; }
+        public string Philo3TitleTr { get; set; }
+        public string Philo3Desc { get; set; }
+        public string Philo3DescTr { get; set; }
+        public IFormFile? Philo3Icon { get; set; } // Dosya
 
         // D. Video
         public string ShowreelUrl { get; set; }

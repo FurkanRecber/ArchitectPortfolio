@@ -45,6 +45,17 @@ namespace ArchiPortfolio.Application.Services
 
                 dto.Address = !string.IsNullOrEmpty(setting.AddressTr) ? setting.AddressTr : setting.Address;
                 dto.MetaKeywords = !string.IsNullOrEmpty(setting.MetaKeywordsTr) ? setting.MetaKeywordsTr : setting.MetaKeywords;
+                
+                dto.PhilosophySectionTitle = !string.IsNullOrEmpty(setting.PhilosophySectionTitleTr) ? setting.PhilosophySectionTitleTr : setting.PhilosophySectionTitle;
+        
+                dto.Philo1Title = !string.IsNullOrEmpty(setting.Philo1TitleTr) ? setting.Philo1TitleTr : setting.Philo1Title;
+                dto.Philo1Desc = !string.IsNullOrEmpty(setting.Philo1DescTr) ? setting.Philo1DescTr : setting.Philo1Desc;
+
+                dto.Philo2Title = !string.IsNullOrEmpty(setting.Philo2TitleTr) ? setting.Philo2TitleTr : setting.Philo2Title;
+                dto.Philo2Desc = !string.IsNullOrEmpty(setting.Philo2DescTr) ? setting.Philo2DescTr : setting.Philo2Desc;
+
+                dto.Philo3Title = !string.IsNullOrEmpty(setting.Philo3TitleTr) ? setting.Philo3TitleTr : setting.Philo3Title;
+                dto.Philo3Desc = !string.IsNullOrEmpty(setting.Philo3DescTr) ? setting.Philo3DescTr : setting.Philo3Desc;
             }
 
             return dto;
@@ -97,13 +108,20 @@ namespace ArchiPortfolio.Application.Services
                 setting.AboutImageUrl = await _photoService.UploadPhotoAsync(dto.AboutImage);
             }
             
-            if (dto.PhilosophyIcon != null)
+            if (dto.Philo1Icon != null) {
+                if (!string.IsNullOrEmpty(setting.Philo1IconUrl)) _photoService.DeletePhoto(setting.Philo1IconUrl);
+                setting.Philo1IconUrl = await _photoService.UploadPhotoAsync(dto.Philo1Icon);
+            }
+            // İkon 2
+            if (dto.Philo2Icon != null) {
+                if (!string.IsNullOrEmpty(setting.Philo2IconUrl)) _photoService.DeletePhoto(setting.Philo2IconUrl);
+                setting.Philo2IconUrl = await _photoService.UploadPhotoAsync(dto.Philo2Icon);
+            }
+            // İkon 3
+            if (dto.Philo3Icon != null)
             {
-                if (!string.IsNullOrEmpty(setting.PhilosophyIconUrl))
-                {
-                    _photoService.DeletePhoto(setting.PhilosophyIconUrl);
-                }
-                setting.PhilosophyIconUrl = await _photoService.UploadPhotoAsync(dto.PhilosophyIcon);
+                if (!string.IsNullOrEmpty(setting.Philo3IconUrl)) _photoService.DeletePhoto(setting.Philo3IconUrl);
+                setting.Philo3IconUrl = await _photoService.UploadPhotoAsync(dto.Philo3Icon);
             }
 
             _repository.Update(setting);
