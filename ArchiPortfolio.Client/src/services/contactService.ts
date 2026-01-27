@@ -24,5 +24,9 @@ export const contactService = {
 
     replyToMessage: async (id: number, subject: string, messageBody: string): Promise<void> => {
         await axios.post(`${API_URL}/${id}/reply`, { subject, messageBody });
+    },
+
+    deleteMessage: async (id: number): Promise<void> => {
+        await axios.delete(`${API_URL}/${id}`);
     }
 };

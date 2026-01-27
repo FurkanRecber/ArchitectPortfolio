@@ -49,9 +49,15 @@ const Navbar: React.FC<NavbarProps> = ({ darkMode, toggleDarkMode, language, tog
 
       <div className={`hidden md:flex items-center gap-8 text-sm font-medium ${isDarkMode ? 'text-white/90' : 'text-zinc-900/90'}`}>
         <div className={`flex gap-8 border-r pr-8 mr-2 ${isDarkMode ? 'border-white/20' : 'border-zinc-900/20'}`}>
-          <Link to="/work" className={`transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-black'}`}>Work</Link>
-          <Link to="/studio" className={`transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-black'}`}>Studio</Link>
-          <Link to="/contact" className={`transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-black'}`}>Contact</Link>
+          <Link to="/work" className={`transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-black'}`}>
+            {language === 'EN' ? 'Work' : 'Projeler'}
+          </Link>
+          <Link to="/studio" className={`transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-black'}`}>
+            {language === 'EN' ? 'Studio' : 'Stüdyo'}
+          </Link>
+          <Link to="/contact" className={`transition-colors ${isDarkMode ? 'hover:text-white' : 'hover:text-black'}`}>
+            {language === 'EN' ? 'Contact' : 'İletişim'}
+          </Link>
         </div>
 
         <div className="flex items-center gap-4">
@@ -65,7 +71,7 @@ const Navbar: React.FC<NavbarProps> = ({ darkMode, toggleDarkMode, language, tog
           </button>
 
           <Link to="/contact" className="ml-4 bg-accent-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-accent-500 transition-colors shadow-lg shadow-accent-600/20">
-            Inquire
+            {language === 'EN' ? 'Inquire' : 'Teklif Al'}
           </Link>
         </div>
       </div>

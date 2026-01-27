@@ -25,10 +25,22 @@ import { categoryService } from '../../services/categoryService';
 import { getImageUrl } from '../../utils/imageUrlHelper';
 import type { Category } from '../../types';
 
-const AdminCategories: React.FC = () => {
+interface AdminCategoriesProps {
+    language?: 'EN' | 'TR';
+}
+
+
+import { translations } from '../../translations';
+
+interface AdminCategoriesProps {
+    language?: 'EN' | 'TR';
+}
+
+const AdminCategories: React.FC<AdminCategoriesProps> = ({ language = 'EN' }) => {
     const navigate = useNavigate();
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
+    const t = translations[language].admin.categories;
 
     // Filtreleme ve Sıralama State'leri
     const [searchQuery, setSearchQuery] = useState('');
@@ -128,8 +140,8 @@ const AdminCategories: React.FC = () => {
             <div className="px-8 py-8">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-1">Categories</h1>
-                        <p className="text-zinc-500 dark:text-slate-400 text-sm">Manage your portfolio structure. Organize projects into logical groups.</p>
+                        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-1">{t.title}</h1>
+                        <p className="text-zinc-500 dark:text-slate-400 text-sm">{t.subtitle}</p>
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-3">
@@ -137,7 +149,7 @@ const AdminCategories: React.FC = () => {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-slate-500" size={16} />
                             <input
                                 type="text"
-                                placeholder="Search categories..."
+                                placeholder={t.searchPlaceholder}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#2A303C] rounded-lg pl-10 pr-4 py-2.5 text-sm text-zinc-900 dark:text-slate-200 focus:outline-none focus:border-zinc-400 dark:focus:border-slate-500 w-full md:w-64 transition-colors"
@@ -149,7 +161,7 @@ const AdminCategories: React.FC = () => {
                             className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#2A303C] rounded-lg text-sm font-medium text-zinc-700 dark:text-slate-300 hover:bg-zinc-50 dark:hover:bg-[#1F2430] transition-colors"
                         >
                             <Filter size={16} />
-                            <span>Sort: {sortBy === 'name' ? 'Name' : 'Count'}</span>
+                            <span>{t.sort}: {sortBy === 'name' ? (language === 'TR' ? 'İsim' : 'Name') : (language === 'TR' ? 'Sayı' : 'Count')}</span>
                         </button>
 
                         <button
@@ -157,7 +169,7 @@ const AdminCategories: React.FC = () => {
                             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-500/20"
                         >
                             <Plus size={18} />
-                            <span>New Category</span>
+                            <span>{t.newCategory}</span>
                         </button>
                     </div>
                 </div>
@@ -188,7 +200,7 @@ const AdminCategories: React.FC = () => {
                                 )}
 
                                 <div className="absolute top-4 right-4 bg-white/90 dark:bg-[#1A1D27]/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-zinc-900 dark:text-white border border-white/20 shadow-sm z-10">
-                                    {category.projectCount ?? 0} Projects
+                                    {category.projectCount ?? 0} {t.projectCount}
                                 </div>
 
                                 <div className="relative z-10 flex flex-col items-center">
@@ -212,7 +224,7 @@ const AdminCategories: React.FC = () => {
                                         >
                                             <PenLine size={20} />
                                         </button>
-                                        <span className="text-xs font-bold text-white">Edit</span>
+                                        <span className="text-xs font-bold text-white">{t.edit}</span>
                                     </div>
                                     <div className="flex flex-col items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100">
                                         <button
@@ -224,7 +236,7 @@ const AdminCategories: React.FC = () => {
                                         >
                                             <Trash2 size={20} />
                                         </button>
-                                        <span className="text-xs font-bold text-white">Delete</span>
+                                        <span className="text-xs font-bold text-white">{t.delete}</span>
                                     </div>
                                 </div>
                             </div>
@@ -240,8 +252,8 @@ const AdminCategories: React.FC = () => {
                             <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-[#1A1D27] flex items-center justify-center mb-4 text-zinc-400 dark:text-slate-600 group-hover:scale-110 transition-transform">
                                 <Plus size={32} strokeWidth={1.5} />
                             </div>
-                            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-1">Add New Category</h3>
-                            <p className="text-sm text-zinc-500 dark:text-slate-500 px-8">Create a new portfolio group to organize your work.</p>
+                            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-1">{t.addNewCard.title}</h3>
+                            <p className="text-sm text-zinc-500 dark:text-slate-500 px-8">{t.addNewCard.desc}</p>
                         </div>
                     )}
                 </div>

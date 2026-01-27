@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-    Plus, Home, Building2, Armchair, Trees, Map, Store,
+    Home, Building2, Armchair, Trees, Map, Store,
     Warehouse, Landmark, DraftingCompass, Hotel, Castle,
-    UploadCloud, Check
+    UploadCloud, Check, ArrowLeft, Globe
 } from 'lucide-react';
 import { categoryService } from '../../services/categoryService';
 import { getImageUrl } from '../../utils/imageUrlHelper';
 
-const AdminNewCategory: React.FC = () => {
+interface AdminNewCategoryProps {
+    language?: 'EN' | 'TR';
+}
+
+import { translations } from '../../translations';
+
+const AdminNewCategory: React.FC<AdminNewCategoryProps> = ({ language = 'EN' }) => {
     const navigate = useNavigate();
     const { id } = useParams();
     const isEditMode = !!id;
+    const t = translations[language].admin.categories.form;
 
     // STATE
     const [name, setName] = useState('');
@@ -109,7 +116,7 @@ const AdminNewCategory: React.FC = () => {
         }
     };
 
-    const SelectedIconComponent = icons.find(i => i.id === selectedIcon)?.component || Plus;
+    // const SelectedIconComponent = icons.find(i => i.id === selectedIcon)?.component || Plus;
 
     return (
         <div className="flex-1 flex flex-col h-full overflow-y-auto bg-zinc-50 dark:bg-[#0B0E14] transition-colors duration-500">
@@ -127,12 +134,16 @@ const AdminNewCategory: React.FC = () => {
 
                     {/* Hero Section */}
                     <div className="flex flex-col items-center text-center space-y-4 mb-8">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            <SelectedIconComponent size={32} color="white" />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">{isEditMode ? 'Edit Category' : 'Create New Category'}</h1>
-                            <p className="text-zinc-500 dark:text-slate-400 mt-2">Manage portfolio structure and icons.</p>
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => navigate('/admin/categories')} className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-full transition-colors">
+                                <ArrowLeft size={20} className="text-zinc-600 dark:text-slate-400" />
+                            </button>
+                            <div>
+                                <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">
+                                    {isEditMode ? t.editTitle : t.createTitle}
+                                </h2>
+                                <p className="text-sm text-zinc-500 dark:text-slate-400">{t.subtitle}</p>
+                            </div>
                         </div>
                     </div>
 
@@ -141,12 +152,11 @@ const AdminNewCategory: React.FC = () => {
                         {/* LEFT COLUMN: English & Details */}
                         <div className="space-y-6 bg-white dark:bg-[#151922] p-6 rounded-2xl border border-zinc-200 dark:border-[#1F2430]">
                             <h3 className="font-bold text-zinc-900 dark:text-white border-b border-zinc-100 dark:border-[#1F2430] pb-3 mb-4 flex items-center gap-2">
-                                <img src="https://flagcdn.com/gb.svg" className="w-5 rounded" alt="EN" />
-                                English & General
+                                <Globe size={18} className="text-blue-500" /> {t.englishInfo}
                             </h3>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-zinc-500 uppercase">Name (EN)</label>
+                                <label className="text-xs font-bold text-zinc-500 uppercase">{t.name}</label>
                                 <input
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
@@ -156,7 +166,7 @@ const AdminNewCategory: React.FC = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-zinc-500 uppercase">Description (EN)</label>
+                                <label className="text-xs font-bold text-zinc-500 uppercase">{t.description}</label>
                                 <textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
@@ -168,7 +178,7 @@ const AdminNewCategory: React.FC = () => {
 
                             {/* Icon Selection */}
                             <div className="space-y-2 pt-4">
-                                <label className="text-xs font-bold text-zinc-500 uppercase block mb-2">Select Icon</label>
+                                <label className="text-xs font-bold text-zinc-500 uppercase block mb-2">{t.selectIcon}</label>
                                 <div className="grid grid-cols-6 gap-2">
                                     {icons.map((item) => (
                                         <button
@@ -190,45 +200,45 @@ const AdminNewCategory: React.FC = () => {
                         <div className="space-y-6 bg-white dark:bg-[#151922] p-6 rounded-2xl border border-zinc-200 dark:border-[#1F2430]">
                             <h3 className="font-bold text-zinc-900 dark:text-white border-b border-zinc-100 dark:border-[#1F2430] pb-3 mb-4 flex items-center gap-2">
                                 <img src="https://flagcdn.com/tr.svg" className="w-5 rounded" alt="TR" />
-                                Türkçe & Media
+                                {t.turkishInfo}
                             </h3>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-zinc-500 uppercase">Kategori Adı (TR)</label>
+                                <label className="text-xs font-bold text-zinc-500 uppercase">{t.name} (TR)</label>
                                 <input
                                     value={nameTr}
                                     onChange={(e) => setNameTr(e.target.value)}
                                     placeholder="Örn. Konut"
-                                    className="w-full p-3 bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] rounded-lg outline-none focus:border-blue-500 dark:text-white"
+                                    className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white outline-none focus:border-blue-500 transition-colors"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-zinc-500 uppercase">Açıklama (TR)</label>
+                                <label className="text-xs font-bold text-zinc-500 uppercase">{t.description} (TR)</label>
                                 <textarea
                                     value={descriptionTr}
                                     onChange={(e) => setDescriptionTr(e.target.value)}
-                                    rows={4}
-                                    placeholder="Bu kategori için kısa açıklama..."
-                                    className="w-full p-3 bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] rounded-lg outline-none focus:border-blue-500 dark:text-white resize-none"
+                                    rows={3}
+                                    placeholder="Kısa açıklama..."
+                                    className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white outline-none focus:border-blue-500 transition-colors"
                                 />
                             </div>
 
                             {/* Cover Image */}
                             <div className="space-y-2 pt-4">
-                                <label className="text-xs font-bold text-zinc-500 uppercase">Cover Image</label>
+                                <label className="text-xs font-bold text-zinc-500 uppercase">{t.coverImage}</label>
                                 <div className="border-2 border-dashed border-zinc-300 dark:border-[#2A303C] rounded-xl bg-zinc-50 dark:bg-[#1A1D27]/50 hover:bg-zinc-100 transition-colors relative h-40 flex flex-col items-center justify-center text-center overflow-hidden group">
                                     {previewUrl ? (
                                         <>
                                             <img src={previewUrl} alt="Cover" className="w-full h-full object-cover" />
                                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                <p className="text-white text-xs font-bold">Click to Change</p>
+                                                <p className="text-white text-xs font-bold">{t.clickChange}</p>
                                             </div>
                                         </>
                                     ) : (
                                         <>
                                             <UploadCloud size={24} className="text-zinc-400 mb-2" />
-                                            <p className="text-zinc-500 text-xs">Upload Image</p>
+                                            <p className="text-zinc-500 text-xs">{t.uploadImage}</p>
                                         </>
                                     )}
                                     <input
@@ -249,14 +259,14 @@ const AdminNewCategory: React.FC = () => {
                             onClick={() => navigate('/admin/categories')}
                             className="px-6 py-3 text-sm font-bold text-zinc-500 hover:text-zinc-900 dark:text-slate-400 dark:hover:text-white transition-colors"
                         >
-                            Cancel
+                            {t.cancel}
                         </button>
                         <button
                             onClick={handleSubmit}
                             disabled={loading}
                             className="flex items-center gap-2 px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-xl text-sm font-bold shadow-lg hover:opacity-90 disabled:opacity-50 transition-all"
                         >
-                            {loading ? 'Saving...' : 'Save Category'}
+                            {loading ? t.saving : t.save}
                             <Check size={18} />
                         </button>
                     </div>

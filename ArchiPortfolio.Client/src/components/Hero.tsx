@@ -1,15 +1,21 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowDown } from 'lucide-react';
+import { getImageUrl } from '../utils/imageUrlHelper';
 
-const Hero: React.FC = () => {
+interface HeroProps {
+  title?: string;
+  subtitle?: string;
+  imageUrl?: string;
+  buttonText?: string;
+}
+
+const Hero: React.FC<HeroProps> = ({ title, subtitle, imageUrl, buttonText }) => {
   return (
     <section className="relative h-screen w-full overflow-hidden flex flex-col justify-center items-center text-center px-6">
       <div className="absolute inset-0 z-0">
-        {/* DÜZELTME: Çalışan yeni resim linki ve alt="" (boş) etiketi */}
         <img
-          src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?q=80&w=2670&auto=format&fit=crop"
-          alt=""
+          src={getImageUrl(imageUrl)}
+          alt="Hero Background"
           className="w-full h-full object-cover"
         />
         {/* Resimdeki gibi koyu filtre ve aşağıya doğru zinc-950'ye geçiş */}
@@ -24,8 +30,7 @@ const Hero: React.FC = () => {
           transition={{ duration: 0.8 }}
           className="text-6xl md:text-8xl font-light text-white mb-6 tracking-tight leading-[1.1]"
         >
-          Visionary <br />
-          <span className="font-bold">Spaces</span>
+          {title || "Visionary Spaces"}
         </motion.h1>
 
         <motion.p
@@ -34,7 +39,7 @@ const Hero: React.FC = () => {
           transition={{ delay: 0.2, duration: 0.8 }}
           className="text-lg text-white/80 max-w-md font-light mb-12"
         >
-          Crafting sustainable modern living through precision, light, and timeless materials.
+          {subtitle || "Crafting sustainable modern living through precision, light, and timeless materials."}
         </motion.p>
 
         <motion.div
@@ -49,7 +54,7 @@ const Hero: React.FC = () => {
             }
           }}
         >
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/60">Explore</span>
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/60">{buttonText || "Explore"}</span>
           <ArrowDown className="text-white w-5 h-5" />
         </motion.div>
       </div>

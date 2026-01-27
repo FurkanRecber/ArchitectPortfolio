@@ -4,13 +4,21 @@ import ProjectCard from './ProjectCard';
 import { projectService } from '../services/projectService';
 import { categoryService } from '../services/categoryService';
 import type { Project } from '../types';
+import { translations } from '../translations';
 
-const WorkPage: React.FC = () => {
+interface WorkPageProps {
+  language?: 'EN' | 'TR';
+}
+
+const WorkPage: React.FC<WorkPageProps> = ({ language = 'EN' }) => {
   // --- STATE TANIMLARI ---
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [projects, setProjects] = useState<Project[]>([]);
   const [categories, setCategories] = useState<string[]>(['All']); // Başlangıçta sadece 'All' var
   const [loading, setLoading] = useState(true);
+
+  // Dil paketini seç
+  const t = translations[language].work;
 
   // --- VERİ ÇEKME İŞLEMİ (PROJECTS & CATEGORIES) ---
   useEffect(() => {
@@ -18,17 +26,19 @@ const WorkPage: React.FC = () => {
       try {
         setLoading(true);
 
-        // Paralel olarak hem projeleri hem kategorileri çekiyoruz (Daha hızlı açılması için)
+        const langCode = language.toLowerCase();
+
+        // Paralel olarak hem projeleri hem kategorileri çekiyoruz
         const [projectsData, categoriesData] = await Promise.all([
-          projectService.getAllProjects(),
-          categoryService.getAllCategories()
+          projectService.getAllProjects(langCode),
+          categoryService.getAllCategories(langCode)
         ]);
 
         // 1. Projeleri State'e at
         setProjects(projectsData);
 
-        // 2. Kategorileri State'e at (Gelen objelerden sadece isimleri alıyoruz)
-        // Backend'den gelen: [{id:1, name:'Residential'}, ...] -> Bizim istediğimiz: ['All', 'Residential', ...]
+        // 2. Kategorileri State'e at
+        // Not: Backend'den gelen kategoriler zaten localize edilmiş olmalı (Name property'si)
         const categoryNames = ['All', ...categoriesData.map(c => c.name)];
         setCategories(categoryNames);
 
@@ -40,7 +50,7 @@ const WorkPage: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [language]); // Language değişince tekrar çek
 
   // --- FİLTRELEME MANTIĞI ---
   const filteredProjects = useMemo(() => {
@@ -54,7 +64,7 @@ const WorkPage: React.FC = () => {
     return (
       <div className="min-h-screen pt-32 flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors duration-500">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-accent-600 mb-4"></div>
-        <p className="text-sm uppercase tracking-widest text-zinc-500">Yükleniyor...</p>
+        <p className="text-sm uppercase tracking-widest text-zinc-500">{language === 'TR' ? 'Yükleniyor...' : 'Loading...'}</p>
       </div>
     );
   }
@@ -80,7 +90,7 @@ const WorkPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="block text-accent-600 text-xs font-bold tracking-[0.2em] uppercase mb-4"
             >
-              Selected Works
+              {t.subtitle}
             </motion.span>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -88,7 +98,7 @@ const WorkPage: React.FC = () => {
               transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
               className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-zinc-900 dark:text-white leading-[1.1]"
             >
-              Shaping the <span className="text-accent-600">future</span>
+              {t.title} <span className="text-accent-600">{t.titleHighlight}</span>
             </motion.h1>
           </div>
 
@@ -108,7 +118,7 @@ const WorkPage: React.FC = () => {
                   : 'bg-transparent text-zinc-500 border-zinc-300 dark:border-zinc-800 hover:border-accent-600 hover:text-accent-600'
                   }`}
               >
-                {category}
+                {category === 'All' ? t.categoryAll : category}
               </button>
             ))}
           </motion.div>
@@ -129,12 +139,12 @@ const WorkPage: React.FC = () => {
         {/* Empty State (Filtre sonucunda proje yoksa) */}
         {filteredProjects.length === 0 && (
           <div className="flex flex-col items-center justify-center py-32 text-zinc-500">
-            <p className="text-xl font-light">Bu kategoride henüz proje bulunmuyor.</p>
+            <p className="text-xl font-light">{t.emptyState}</p>
             <button
               onClick={() => setSelectedCategory('All')}
               className="mt-4 text-accent-600 hover:text-accent-500 underline decoration-1 underline-offset-4"
             >
-              Filtreleri Temizle
+              {t.clearFilters}
             </button>
           </div>
         )}

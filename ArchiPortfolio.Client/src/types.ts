@@ -45,6 +45,8 @@ export interface Stat {
 export interface Category {
   id: number;
   name: string;
+  nameTr?: string; // Türkçe Kategori Adı
+  descriptionTr?: string; // Türkçe Açıklama
   // Yeni eklenenler:
   description?: string;
   iconId?: number;
@@ -73,24 +75,24 @@ export interface AuthResponse {
 export interface SiteSetting {
   id: number;
 
-  // General & Brand
-  siteTitle?: string;
-  logoUrl?: string; // Logo
+  // 1. General
+  siteTitle: string;
+  logoUrl?: string;
   copyrightText?: string;
   copyrightTextTr?: string;
   footerDescription?: string;
   footerDescriptionTr?: string;
 
-  // Hero Section
-  heroTitle: string;
-  heroTitleTr: string;
+  // 2. Hero
+  heroTitle?: string;
+  heroTitleTr?: string;
   heroSubtitle?: string;
   heroSubtitleTr?: string;
   heroButtonText?: string;
   heroButtonTextTr?: string;
   heroImageUrl?: string;
 
-  // CTA Section
+  // 3. CTA
   ctaTitle?: string;
   ctaTitleTr?: string;
   ctaDescription?: string;
@@ -98,20 +100,13 @@ export interface SiteSetting {
   ctaButtonText?: string;
   ctaButtonTextTr?: string;
 
-  // About & Studio (Updated)
-  aboutTitle: string;
-  aboutTitleTr: string;
-  aboutDescription?: string; // Was aboutText
+  // 4. STUDIO (About & Metrics)
+  aboutTitle?: string;
+  aboutTitleTr?: string;
+  aboutDescription?: string;
   aboutDescriptionTr?: string;
   aboutImageUrl?: string;
 
-  // Philosophy
-  philosophyTitle?: string;
-  philosophyTitleTr?: string;
-  philosophyDescription?: string;
-  philosophyDescriptionTr?: string;
-
-  // Metrics (Flexible)
   metric1Title?: string;
   metric1TitleTr?: string;
   metric1Value?: string;
@@ -124,26 +119,54 @@ export interface SiteSetting {
   metric3TitleTr?: string;
   metric3Value?: string;
 
-  // Showreel
+  // 5. STUDIO (PHILOSOPHY - YENİ MADDELİ YAPI)
+  // Eski "philosophyTitle" ve "philosophyDescription" alanlarını silebilirsin veya tutabilirsin.
+  // Ancak Studio.tsx artık aşağıdaki alanları kullanıyor:
+
+  philosophySectionTitle?: string;
+  philosophySectionTitleTr?: string;
+
+  // Madde 1
+  philo1Title?: string;
+  philo1TitleTr?: string;
+  philo1Desc?: string;
+  philo1DescTr?: string;
+  philo1IconUrl?: string;
+
+  // Madde 2
+  philo2Title?: string;
+  philo2TitleTr?: string;
+  philo2Desc?: string;
+  philo2DescTr?: string;
+  philo2IconUrl?: string;
+
+  // Madde 3
+  philo3Title?: string;
+  philo3TitleTr?: string;
+  philo3Desc?: string;
+  philo3DescTr?: string;
+  philo3IconUrl?: string;
+
+  // Video
   showreelUrl?: string;
+  webSiteVisitorCount?: number;
 
-  // Contact & Social
-  email: string;
-  phone: string;
-  address: string;
-  addressTr: string;
-  googleMapEmbedCode: string;
+  // 6. Contact
+  email?: string;
+  phone?: string;
+  address?: string;
+  addressTr?: string;
+  googleMapEmbedCode?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  linkedinUrl?: string;
+  youtubeUrl?: string;
 
-  facebookUrl: string;
-  instagramUrl: string;
-  linkedinUrl: string;
-  youtubeUrl: string;
-
-  // SEO
+  // 7. SEO
   googleAnalyticsId?: string;
   googleTagManagerId?: string;
-  headScripts?: string;
   metaKeywords?: string;
   metaKeywordsTr?: string;
+  headScripts?: string;
   robotsTxt?: string;
 }

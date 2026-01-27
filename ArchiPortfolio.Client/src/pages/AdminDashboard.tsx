@@ -23,6 +23,7 @@ import AdminMessages from '../components/admin/AdminMessages';
 import AdminReply from '../components/admin/AdminReply';
 
 // Servisler
+import { translations } from '../translations';
 import { authService } from '../services/authService';
 import { projectService } from '../services/projectService';
 import { contactService } from '../services/contactService';
@@ -39,6 +40,7 @@ interface AdminDashboardProps {
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMode, language, toggleLanguage }) => {
     const location = useLocation();
     const navigate = useNavigate();
+    const t = translations[language].admin;
 
     // UI State'leri
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -48,11 +50,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
     const [dashboardProjects, setDashboardProjects] = useState<Project[]>([]);
     const [messagesCount, setMessagesCount] = useState(0);
     const [categoriesCount, setCategoriesCount] = useState(0);
-    const [, setLoading] = useState(true); // Loading used in fetchStats logic but not in UI directly? Should check usage.
-    // Actually error says 'loading' is unused. 'setLoading' is used.
-    // So let's keep setLoading but ignore loading: const [, setLoading] = useState(true);
+    const [, setLoading] = useState(true);
 
-    // 1. Güvenlik Kontrolü (Token yoksa Login'e at)
+    // 1. Güvenlik Kontrolü
     useEffect(() => {
         if (!authService.isAuthenticated()) {
             navigate('/admin/login');
@@ -73,7 +73,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
         else setActiveTab('dashboard');
     }, [location.pathname]);
 
-    // 3. Veri Çekme (Dashboard İstatistikleri)
+    // 3. Veri Çekme
     useEffect(() => {
         if (activeTab === 'dashboard') {
             const fetchStats = async () => {
@@ -84,11 +84,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                         contactService.getAllMessages(),
                         categoryService.getAllCategories()
                     ]);
-                    // Son 5 projeyi al
                     setDashboardProjects(projectsData.slice(0, 5));
-                    // Okunmamış mesaj sayısı
                     setMessagesCount(messagesData.filter((m: any) => !m.isRead).length);
-                    // Kategori sayısı
                     setCategoriesCount(categoriesData.length);
                 } catch (error) {
                     console.error("Dashboard verileri yüklenemedi:", error);
@@ -120,7 +117,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
         if (window.confirm('Are you sure you want to delete this project?')) {
             try {
                 await projectService.deleteProject(id);
-                // Listeyi güncelle
                 setDashboardProjects(prev => prev.filter(p => p.id !== id));
             } catch (error) {
                 console.error("Proje silinirken hata:", error);
@@ -129,17 +125,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
         }
     };
 
-    // İstatistik Kartları Verisi
     const stats = [
-        { title: 'Total Projects', value: dashboardProjects.length.toString(), change: 'Live', changeText: 'on website', changeColor: 'text-green-500', icon: FolderOpen, iconColor: 'text-blue-500' },
-        { title: 'Total Messages', value: messagesCount.toString(), change: 'Inbox', changeText: 'received', changeColor: 'text-zinc-500', icon: MessageSquare, iconColor: 'text-orange-500' },
-        { title: 'Total Categories', value: categoriesCount.toString(), change: 'Active', changeText: 'in system', changeColor: 'text-purple-500', icon: Folder, iconColor: 'text-purple-500' },
+        { title: t.dashboard.totalProjects, value: dashboardProjects.length.toString(), change: t.dashboard.statsChange.live, changeText: t.dashboard.statsChange.onWebsite, changeColor: 'text-green-500', icon: FolderOpen, iconColor: 'text-blue-500' },
+        { title: t.dashboard.totalMessages, value: messagesCount.toString(), change: t.dashboard.statsChange.inbox, changeText: t.dashboard.statsChange.received, changeColor: 'text-zinc-500', icon: MessageSquare, iconColor: 'text-orange-500' },
+        { title: t.dashboard.totalCategories, value: categoriesCount.toString(), change: t.dashboard.statsChange.active, changeText: t.dashboard.statsChange.inSystem, changeColor: 'text-purple-500', icon: Folder, iconColor: 'text-purple-500' },
     ];
 
     return (
         <div className="flex h-screen bg-zinc-50 dark:bg-[#0B0E14] text-zinc-900 dark:text-slate-100 font-sans selection:bg-blue-500/30 transition-colors duration-500">
-
-            {/* Sidebar */}
             <aside className="w-64 border-r border-zinc-200 dark:border-[#1F2430] bg-white dark:bg-[#11141D] flex flex-col transition-colors duration-500">
                 <div onClick={() => handleNavigation('dashboard')} className="h-16 flex items-center px-6 border-b border-zinc-200 dark:border-[#1F2430] gap-3 cursor-pointer hover:bg-zinc-50 dark:hover:bg-[#1A1D27] transition-colors">
                     <img src={darkMode ? vivereLogo : vivereBlackLogo} alt="Admin" className="h-8 w-auto object-contain" />
@@ -150,19 +143,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                 </div>
 
                 <div className="flex-1 py-6 px-4 space-y-1">
-                    <p className="px-4 text-xs font-medium text-zinc-500 dark:text-slate-500 uppercase tracking-wider mb-2">Main</p>
-                    <NavItem icon={LayoutDashboard} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => handleNavigation('dashboard')} />
-                    <NavItem icon={FolderOpen} label="Projects" active={activeTab === 'projects'} onClick={() => handleNavigation('projects')} />
-                    <NavItem icon={Folder} label="Categories" active={activeTab === 'categories'} onClick={() => handleNavigation('categories')} />
-                    <NavItem icon={Globe} label="Site Settings" active={activeTab === 'site-settings'} onClick={() => handleNavigation('site-settings')} />
-                    <NavItem icon={MessageSquare} label="Messages" active={activeTab === 'messages'} onClick={() => handleNavigation('messages')} badge={messagesCount > 0 ? messagesCount.toString() : undefined} />
+                    <p className="px-4 text-xs font-medium text-zinc-500 dark:text-slate-500 uppercase tracking-wider mb-2">{t.sidebar.main}</p>
+                    <NavItem icon={LayoutDashboard} label={t.sidebar.dashboard} active={activeTab === 'dashboard'} onClick={() => handleNavigation('dashboard')} />
+                    <NavItem icon={FolderOpen} label={t.sidebar.projects} active={activeTab === 'projects'} onClick={() => handleNavigation('projects')} />
+                    <NavItem icon={Folder} label={t.sidebar.categories} active={activeTab === 'categories'} onClick={() => handleNavigation('categories')} />
+                    <NavItem icon={Globe} label={t.sidebar.siteSettings} active={activeTab === 'site-settings'} onClick={() => handleNavigation('site-settings')} />
+                    <NavItem icon={MessageSquare} label={t.sidebar.messages} active={activeTab === 'messages'} onClick={() => handleNavigation('messages')} badge={messagesCount > 0 ? messagesCount.toString() : undefined} />
                 </div>
             </aside>
 
-            {/* Main Content */}
             <main className="flex-1 flex flex-col overflow-hidden bg-zinc-50 dark:bg-[#0B0E14]">
-
-                {/* Header */}
                 <header className="h-16 border-b border-zinc-200 dark:border-[#1F2430] bg-white dark:bg-[#11141D] flex items-center justify-between px-8 transition-colors duration-500">
                     <h2 className="text-lg font-medium text-zinc-900 dark:text-slate-100 capitalize">{activeTab.replace('-', ' ')}</h2>
                     <div className="flex items-center gap-6">
@@ -173,15 +163,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                         <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-[#1A1D27] transition-colors">
                             {darkMode ? <Sun size={20} className="text-slate-400" /> : <Moon size={20} className="text-zinc-500" />}
                         </button>
-
-                        {/* Profile Dropdown */}
                         <div className="relative">
                             <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 border border-white/10 cursor-pointer"></button>
                             {isProfileOpen && (
                                 <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#2A303C] rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                                     <div className="p-2 space-y-1">
                                         <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors text-left">
-                                            <LogOut size={16} /> Sign Out
+                                            <LogOut size={16} /> {t.sidebar.logout}
                                         </button>
                                     </div>
                                 </div>
@@ -190,18 +178,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                     </div>
                 </header>
 
-                {/* Content Render Logic */}
-                {activeTab === 'projects' ? <AdminProjects /> :
-                    activeTab === 'projects-new' || activeTab === 'projects-edit' ? <AdminNewProject /> :
-                        activeTab === 'categories' ? <AdminCategories /> :
-                            activeTab === 'categories-edit' ? <AdminNewCategory /> :
-                                activeTab === 'site-settings' ? <AdminSiteSettings /> :
-                                    activeTab === 'messages' ? <AdminMessages /> :
-                                        activeTab === 'messages-reply' ? <AdminReply /> :
+                {activeTab === 'projects' ? <AdminProjects language={language} /> :
+                    activeTab === 'projects-new' || activeTab === 'projects-edit' ? <AdminNewProject language={language} /> :
+                        activeTab === 'categories' ? <AdminCategories language={language} /> :
+                            activeTab === 'categories-edit' ? <AdminNewCategory language={language} /> :
+                                activeTab === 'site-settings' ? <AdminSiteSettings language={language} /> :
+                                    activeTab === 'messages' ? <AdminMessages language={language} /> :
+                                        activeTab === 'messages-reply' ? <AdminReply language={language} /> :
 
-                                            /* DEFAULT DASHBOARD VIEW */
                                             <div className="flex-1 overflow-y-auto p-8">
-                                                {/* Stats */}
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                                                     {stats.map((stat, index) => (
                                                         <div key={index} className="bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-xl p-6 relative">
@@ -214,19 +199,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                                                             </div>
                                                             <div className="flex items-center text-xs">
                                                                 <span className={`${stat.changeColor} font-medium mr-2 bg-green-500/10 px-1.5 py-0.5 rounded`}>{stat.change}</span>
+                                                                <span className="text-zinc-400 dark:text-slate-500">{stat.changeText}</span>
                                                             </div>
                                                         </div>
                                                     ))}
                                                 </div>
 
-                                                {/* Recent Projects Table */}
                                                 <div className="flex items-center justify-between mb-6">
                                                     <div className="flex items-center gap-3">
-                                                        <h3 className="text-xl font-semibold text-zinc-900 dark:text-white">Recent Projects</h3>
+                                                        <h3 className="text-xl font-semibold text-zinc-900 dark:text-white">{t.dashboard.recentProjects}</h3>
                                                         <span className="bg-zinc-100 dark:bg-[#1F2430] text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded-full text-xs font-semibold">{dashboardProjects.length} Total</span>
                                                     </div>
                                                     <button onClick={() => navigate('/admin/projects/new')} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                                                        <Plus size={16} /> <span>Add New Project</span>
+                                                        <Plus size={16} /> <span>{t.dashboard.addNewProject}</span>
                                                     </button>
                                                 </div>
 
@@ -234,18 +219,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                                                     <table className="w-full text-left border-collapse">
                                                         <thead>
                                                             <tr className="border-b border-zinc-200 dark:border-[#1F2430] bg-zinc-50 dark:bg-[#1A1D27] text-xs uppercase text-zinc-500 font-semibold tracking-wider">
-                                                                <th className="px-6 py-4">Project Name</th>
-                                                                <th className="px-6 py-4">Category</th>
-                                                                <th className="px-6 py-4">Date Added</th>
-                                                                <th className="px-6 py-4">Status</th>
-                                                                <th className="px-6 py-4 text-right">Actions</th>
+                                                                <th className="px-6 py-4">{t.dashboard.tableHeaders.projectName}</th>
+                                                                <th className="px-6 py-4">{t.dashboard.tableHeaders.category}</th>
+                                                                <th className="px-6 py-4">{t.dashboard.tableHeaders.dateAdded}</th>
+                                                                <th className="px-6 py-4">{t.dashboard.tableHeaders.status}</th>
+                                                                <th className="px-6 py-4 text-right">{t.dashboard.tableHeaders.actions}</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody className="divide-y divide-zinc-200 dark:divide-[#1F2430]">
                                                             {dashboardProjects.map((project) => (
                                                                 <tr key={project.id} className="hover:bg-zinc-50 dark:hover:bg-[#1A1D27] transition-colors group">
-
-                                                                    {/* 1. PROJE ADI */}
                                                                     <td className="px-6 py-4">
                                                                         <div className="flex items-center gap-4">
                                                                             <img src={getImageUrl(project.coverImageUrl)} alt="" className="w-12 h-10 rounded-lg object-cover shadow-sm border border-zinc-100 dark:border-white/5" />
@@ -255,20 +238,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                                                                             </div>
                                                                         </div>
                                                                     </td>
-
-                                                                    {/* 2. KATEGORİ (Backend'den gelen CategoryName) */}
                                                                     <td className="px-6 py-4 text-sm text-zinc-600 dark:text-slate-400 font-medium">
-                                                                        {/* DTO'da 'category' olarak geliyor */}
                                                                         {project.category || '-'}
                                                                     </td>
-
-                                                                    {/* 3. TARİH (Yıl bilgisi) */}
                                                                     <td className="px-6 py-4 text-sm text-zinc-500 dark:text-slate-500">
-                                                                        {/* DTO'da 'year' olarak geliyor */}
                                                                         {project.year || '2024'}
                                                                     </td>
-
-                                                                    {/* 4. DURUM (DİNAMİK HALE GETİRİLDİ) */}
                                                                     <td className="px-6 py-4">
                                                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${project.status === 'Completed' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20' :
                                                                             project.status === 'In Progress' ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20' :
@@ -280,11 +255,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
                                                                                     project.status === 'Concept' ? 'bg-purple-500' :
                                                                                         'bg-zinc-400'
                                                                                 }`}></span>
-                                                                            {project.status || 'Unknown'}
+                                                                            {project.status === 'Completed' ? t.projects.form.statusOptions.completed :
+                                                                                project.status === 'In Progress' ? t.projects.form.statusOptions.inProgress :
+                                                                                    project.status === 'Concept' ? t.projects.form.statusOptions.concept :
+                                                                                        project.status || 'Unknown'}
                                                                         </span>
                                                                     </td>
-
-                                                                    {/* 5. AKSİYONLAR */}
                                                                     <td className="px-6 py-4 text-right">
                                                                         <div className="flex items-center justify-end gap-2 text-zinc-400">
                                                                             <button onClick={() => navigate(`/work/${project.id}`)} className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-lg hover:text-indigo-600 transition-colors" title="View">

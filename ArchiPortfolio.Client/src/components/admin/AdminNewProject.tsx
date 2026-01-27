@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, X, Save, Image as ImageIcon, Globe } from 'lucide-react';
+import { ArrowLeft, X, Save, Image as ImageIcon, Globe, Trash2, CloudUpload, Edit2, LayoutGrid, List, CheckCircle2 } from 'lucide-react';
 import { projectService } from '../../services/projectService';
 import { categoryService } from '../../services/categoryService';
 import { getImageUrl } from '../../utils/imageUrlHelper'; // Resim yolu düzeltici eklendi
 import type { Category } from '../../types';
 
-const AdminNewProject: React.FC = () => {
+import { translations } from '../../translations';
+
+interface AdminNewProjectProps {
+    language?: 'EN' | 'TR';
+}
+
+const AdminNewProject: React.FC<AdminNewProjectProps> = ({ language = 'EN' }) => {
     const navigate = useNavigate();
     const { id } = useParams();
     const isEditMode = !!id;
+    const t = translations[language].admin.projects.form;
 
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -160,7 +167,13 @@ const AdminNewProject: React.FC = () => {
             data.append('DetailsTr', formData.detailsTr);
 
             // --- DOSYALAR ---
-            if (coverImage) data.append('CoverImage', coverImage);
+            if (coverImage) {
+                data.append('CoverImage', coverImage);
+            } else if (!coverPreview && isEditMode) {
+                // Eğer fotoğraf yoksa ve edit modundaysak, mevcut fotoğrafı silmek istiyoruz
+                data.append('RemoveCoverImage', 'true');
+            }
+
             galleryFiles.forEach(file => data.append('GalleryImages', file));
 
             // Mevcut galeri resimlerini nasıl yollayacağız? 
@@ -197,7 +210,7 @@ const AdminNewProject: React.FC = () => {
                         <ArrowLeft size={20} className="text-zinc-600 dark:text-slate-400" />
                     </button>
                     <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">
-                        {isEditMode ? 'Edit Project' : 'Add New Project'}
+                        {isEditMode ? t.editTitle : t.createTitle}
                     </h2>
                 </div>
             </div>
@@ -207,50 +220,50 @@ const AdminNewProject: React.FC = () => {
                 {/* 1. GENEL BİLGİLER (ORTAK) */}
                 <div className="bg-white dark:bg-[#151922] p-8 rounded-xl border border-zinc-200 dark:border-[#1F2430] shadow-sm">
                     <h3 className="text-lg font-semibold mb-6 flex items-center gap-2 text-zinc-900 dark:text-white">
-                        <Globe size={18} className="text-blue-500" /> General Info (Shared)
+                        <Globe size={18} className="text-blue-500" /> {t.generalInfo}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase text-zinc-500">Category</label>
+                            <label className="text-xs font-bold uppercase text-zinc-500">{t.category}</label>
                             <select name="categoryId" value={formData.categoryId} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white outline-none">
-                                <option value="" disabled>Select Category</option>
+                                <option value="" disabled>{t.selectCategory}</option>
                                 {categories.map(cat => (
                                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                                 ))}
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase text-zinc-500">Client</label>
+                            <label className="text-xs font-bold uppercase text-zinc-500">{t.client}</label>
                             <input name="client" value={formData.client} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase text-zinc-500">Location</label>
+                            <label className="text-xs font-bold uppercase text-zinc-500">{t.location}</label>
                             <input name="location" value={formData.location} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase text-zinc-500">Project Team</label>
+                            <label className="text-xs font-bold uppercase text-zinc-500">{t.team}</label>
                             <input name="projectTeam" value={formData.projectTeam} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase text-zinc-500">Year</label>
+                            <label className="text-xs font-bold uppercase text-zinc-500">{t.year}</label>
                             <input type="number" name="projectYear" value={formData.projectYear} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase text-zinc-500">Area (sqm)</label>
+                            <label className="text-xs font-bold uppercase text-zinc-500">{t.area}</label>
                             <input name="area" value={formData.area} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase text-zinc-500">Status</label>
+                            <label className="text-xs font-bold uppercase text-zinc-500">{t.status}</label>
                             <select name="status" value={formData.status} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white outline-none">
-                                <option value="Completed">Completed</option>
-                                <option value="In Progress">In Progress</option>
-                                <option value="Concept">Concept</option>
+                                <option value="Completed">{t.statusOptions.completed}</option>
+                                <option value="In Progress">{t.statusOptions.inProgress}</option>
+                                <option value="Concept">{t.statusOptions.concept}</option>
                             </select>
                         </div>
 
                         <div className="flex items-center gap-3 pt-6">
                             <input type="checkbox" id="isFeatured" name="isFeatured" checked={formData.isFeatured} onChange={handleInputChange} className="w-5 h-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500" />
-                            <label htmlFor="isFeatured" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer">Featured Project</label>
+                            <label htmlFor="isFeatured" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer">{t.featured}</label>
                         </div>
                     </div>
                 </div>
@@ -262,19 +275,19 @@ const AdminNewProject: React.FC = () => {
                     <div className="bg-white dark:bg-[#151922] p-6 rounded-xl border border-zinc-200 dark:border-[#1F2430] shadow-sm">
                         <div className="flex items-center gap-2 mb-6 pb-4 border-b border-zinc-100 dark:border-[#1F2430]">
                             <img src="https://flagcdn.com/gb.svg" alt="English" className="w-6 h-4 object-cover rounded shadow-sm" />
-                            <h3 className="font-bold text-zinc-900 dark:text-white">English</h3>
+                            <h3 className="font-bold text-zinc-900 dark:text-white">{t.english}</h3>
                         </div>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase text-zinc-500">Title</label>
+                                <label className="text-xs font-bold uppercase text-zinc-500">{t.title}</label>
                                 <input required name="title" value={formData.title} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase text-zinc-500">Description</label>
+                                <label className="text-xs font-bold uppercase text-zinc-500">{t.description}</label>
                                 <textarea name="description" value={formData.description} onChange={handleInputChange} rows={3} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase text-zinc-500">Details</label>
+                                <label className="text-xs font-bold uppercase text-zinc-500">{t.details}</label>
                                 <textarea name="details" value={formData.details} onChange={handleInputChange} rows={6} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                             </div>
                         </div>
@@ -284,80 +297,205 @@ const AdminNewProject: React.FC = () => {
                     <div className="bg-white dark:bg-[#151922] p-6 rounded-xl border border-zinc-200 dark:border-[#1F2430] shadow-sm">
                         <div className="flex items-center gap-2 mb-6 pb-4 border-b border-zinc-100 dark:border-[#1F2430]">
                             <img src="https://flagcdn.com/tr.svg" alt="Turkish" className="w-6 h-4 object-cover rounded shadow-sm" />
-                            <h3 className="font-bold text-zinc-900 dark:text-white">Türkçe</h3>
+                            <h3 className="font-bold text-zinc-900 dark:text-white">{t.turkish}</h3>
                         </div>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase text-zinc-500">Başlık</label>
+                                <label className="text-xs font-bold uppercase text-zinc-500">{t.title}</label>
                                 <input required name="titleTr" value={formData.titleTr} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase text-zinc-500">Kısa Açıklama</label>
+                                <label className="text-xs font-bold uppercase text-zinc-500">{t.description}</label>
                                 <textarea name="descriptionTr" value={formData.descriptionTr} onChange={handleInputChange} rows={3} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase text-zinc-500">Detaylı İçerik</label>
+                                <label className="text-xs font-bold uppercase text-zinc-500">{t.details}</label>
                                 <textarea name="detailsTr" value={formData.detailsTr} onChange={handleInputChange} rows={6} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* 3. GÖRSELLER */}
-                <div className="bg-white dark:bg-[#151922] p-8 rounded-xl border border-zinc-200 dark:border-[#1F2430] shadow-sm">
-                    <h3 className="text-lg font-semibold mb-6 flex items-center gap-2 text-zinc-900 dark:text-white">
-                        <ImageIcon size={18} className="text-purple-500" /> Media & Gallery
-                    </h3>
+                {/* 3. MEDIA & GALLERY */}
+                <div className="space-y-6">
+                    <div>
+                        <h3 className="text-lg font-semibold flex items-center gap-2 text-zinc-900 dark:text-white">
+                            <ImageIcon size={20} className="text-purple-500" /> {t.media}
+                        </h3>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{t.galleryDesc}</p>
+                    </div>
 
-                    <div className="mb-8">
-                        <label className="block text-xs font-bold uppercase text-zinc-500 mb-2">Cover Image</label>
-                        <div className="flex items-start gap-6">
-                            <div className="w-40 h-28 bg-zinc-100 dark:bg-[#1A1D27] border-2 border-dashed border-zinc-300 dark:border-[#2A303C] rounded-lg flex items-center justify-center overflow-hidden relative">
-                                {coverPreview ? (
-                                    <img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
-                                ) : (
-                                    <span className="text-xs text-zinc-400 text-center p-2">No image</span>
-                                )}
+                    {/* COVER IMAGE CARD */}
+                    <div className="bg-white dark:bg-[#151922] rounded-xl border border-zinc-200 dark:border-[#1F2430] shadow-sm overflow-hidden">
+                        {/* Dark Header/Preview Area */}
+                        <div className="bg-gradient-to-br from-zinc-800 to-zinc-950 p-8 relative min-h-[320px] flex flex-col">
+                            <div className="flex justify-between items-start mb-8 relative z-10 w-full">
+                                <div>
+                                    <h4 className="text-white font-bold text-lg">{t.coverImage}</h4>
+                                    <p className="text-zinc-400 text-sm">{t.coverImageDesc}</p>
+                                </div>
+                                <span className="bg-green-500/20 text-green-400 text-xs font-bold px-3 py-1 rounded-full border border-green-500/30 shadow-sm backdrop-blur-md">
+                                    {t.active}
+                                </span>
                             </div>
-                            <div className="flex-1">
-                                <input type="file" onChange={handleCoverImageChange} accept="image/*" className="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/20 dark:file:text-blue-400" />
+
+                            {/* Centered Preview */}
+                            <div className="flex-1 flex items-center justify-center relative z-10">
+                                <div className="relative w-48 h-48 bg-white/5 rounded-lg border-2 border-white/10 shadow-2xl overflow-hidden backdrop-blur-sm group transition-transform hover:scale-105 duration-300">
+                                    {coverPreview ? (
+                                        <img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500">
+                                            <ImageIcon size={32} className="opacity-50 mb-2" />
+                                            <span className="text-xs">Preview</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Decorative Background Glow */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                        </div>
+
+                        {/* White Footer Action Bar */}
+                        <div className="bg-white dark:bg-[#151922] p-4 flex items-center justify-between border-t border-zinc-200 dark:border-[#1F2430]">
+                            {coverPreview ? (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setCoverImage(null);
+                                        setCoverPreview(null);
+                                        const fileInput = document.getElementById('coverImageInput') as HTMLInputElement;
+                                        if (fileInput) fileInput.value = '';
+                                    }}
+                                    className="flex items-center gap-2 text-zinc-500 hover:text-red-600 transition-colors text-sm font-medium px-4 py-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                >
+                                    <Trash2 size={16} />
+                                    {t.remove}
+                                </button>
+                            ) : (
+                                <div></div>
+                            )}
+
+                            <div>
+                                <label
+                                    htmlFor="coverImageInput"
+                                    className="cursor-pointer flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 active:scale-95"
+                                >
+                                    <Edit2 size={16} />
+                                    {coverPreview ? t.change : t.chooseFile}
+                                </label>
+                                <input
+                                    id="coverImageInput"
+                                    type="file"
+                                    onChange={handleCoverImageChange}
+                                    accept="image/*"
+                                    className="hidden"
+                                />
                             </div>
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-bold uppercase text-zinc-500 mb-2">Gallery Images</label>
-                        <input type="file" multiple onChange={handleGalleryChange} accept="image/*" className="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 dark:file:bg-purple-900/20 dark:file:text-purple-400" />
-
-                        <div className="mt-4 grid grid-cols-2 md:grid-cols-6 gap-4">
-                            {/* Mevcut Galerideki Resimler */}
-                            {existingGallery.map((url, idx) => (
-                                <div key={`existing-${idx}`} className="relative group aspect-square bg-zinc-100 dark:bg-[#1A1D27] rounded-lg overflow-hidden border border-blue-500/30">
-                                    <img src={getImageUrl(url)} alt="existing" className="w-full h-full object-cover" />
-                                    <div className="absolute top-1 left-1 bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded shadow-sm opacity-90">Saved</div>
-                                    <button type="button" onClick={() => handleRemoveExistingImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <X size={10} />
-                                    </button>
-                                </div>
-                            ))}
-
-                            {/* Yeni Eklenen Dosyalar */}
-                            {galleryFiles.map((file, idx) => (
-                                <div key={`new-${idx}`} className="relative group aspect-square bg-zinc-100 dark:bg-[#1A1D27] rounded-lg overflow-hidden border border-green-500/30">
-                                    <img src={URL.createObjectURL(file)} alt="new preview" className="w-full h-full object-cover" />
-                                    <div className="absolute top-1 left-1 bg-green-600 text-white text-[10px] px-1.5 py-0.5 rounded shadow-sm opacity-90">New</div>
-                                    <button type="button" onClick={() => setGalleryFiles(files => files.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <X size={10} />
-                                    </button>
-                                </div>
-                            ))}
+                    {/* GALLERY SECTION */}
+                    <div className="pt-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                {t.gallery}
+                                <span className="bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs px-2 py-0.5 rounded-full">
+                                    {existingGallery.length + galleryFiles.length}
+                                </span>
+                            </h3>
+                            <div className="flex items-center gap-1">
+                                <button type="button" className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                                    <LayoutGrid size={18} />
+                                </button>
+                                <button type="button" className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                                    <List size={18} />
+                                </button>
+                            </div>
                         </div>
+
+                        {/* Large Upload Zone */}
+                        <div className="relative group">
+                            <label
+                                htmlFor="galleryImageInput"
+                                className="relative block w-full border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-12 text-center hover:border-purple-500 dark:hover:border-purple-500 transition-colors cursor-pointer bg-zinc-50/50 dark:bg-zinc-900/50 hover:bg-purple-50/50 dark:hover:bg-purple-900/10"
+                            >
+                                <div className="flex flex-col items-center justify-center gap-4">
+                                    <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                        <CloudUpload size={32} />
+                                    </div>
+                                    <div>
+                                        <span className="text-purple-600 dark:text-purple-400 font-bold">{t.clickToUpload}</span>
+                                        <span className="text-zinc-500 dark:text-zinc-400"> {t.dragDrop}</span>
+                                    </div>
+                                    <p className="text-xs text-zinc-400 uppercase tracking-wide">{t.fileLimit}</p>
+                                </div>
+                            </label>
+                            <input
+                                id="galleryImageInput"
+                                type="file"
+                                multiple
+                                onChange={handleGalleryChange}
+                                accept="image/*"
+                                className="hidden"
+                            />
+                        </div>
+
+                        {/* Gallery Grid */}
+                        {(existingGallery.length > 0 || galleryFiles.length > 0) && (
+                            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6">
+                                {/* Existing Images */}
+                                {existingGallery.map((url, idx) => (
+                                    <div key={`existing-${idx}`} className="group relative aspect-square bg-white dark:bg-[#1A1D27] rounded-xl overflow-hidden shadow-sm border border-zinc-200 dark:border-zinc-800">
+                                        <img src={getImageUrl(url)} alt="gallery" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        <div className="absolute top-2 left-2">
+                                            <span className="bg-blue-600/90 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-full shadow-sm backdrop-blur-sm flex items-center gap-1">
+                                                <CheckCircle2 size={10} /> {t.saved}
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveExistingImage(idx)}
+                                            className="absolute top-2 right-2 bg-white/90 dark:bg-black/90 text-red-500 hover:text-red-600 p-1.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <p className="text-white text-xs truncate">Existing Image {idx + 1}</p>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {/* New Files */}
+                                {galleryFiles.map((file, idx) => (
+                                    <div key={`new-${idx}`} className="group relative aspect-square bg-white dark:bg-[#1A1D27] rounded-xl overflow-hidden shadow-sm border border-green-500/30">
+                                        <img src={URL.createObjectURL(file)} alt="new preview" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        <div className="absolute top-2 left-2">
+                                            <span className="bg-green-600/90 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-full shadow-sm backdrop-blur-sm flex items-center gap-1">
+                                                <CheckCircle2 size={10} /> New
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setGalleryFiles(files => files.filter((_, i) => i !== idx))}
+                                            className="absolute top-2 right-2 bg-white/90 dark:bg-black/90 text-red-500 hover:text-red-600 p-1.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <p className="text-white text-xs truncate">{file.name}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 <div className="flex justify-end pt-4">
                     <button type="submit" disabled={loading} className="flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-black px-8 py-4 rounded-xl font-bold uppercase tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50">
-                        {loading ? 'Saving...' : 'Save Project'}
+                        {loading ? t.saving : t.save}
                         <Save size={18} />
                     </button>
                 </div>

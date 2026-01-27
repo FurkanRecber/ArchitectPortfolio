@@ -60,10 +60,10 @@ const App: React.FC = () => {
 
       <main>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/work" element={<Work />} />
-          <Route path="/studio" element={<Studio />} />
-          <Route path="/contact" element={<Contact />} />
+          <Route path="/" element={<Home language={language} />} />
+          <Route path="/work" element={<Work language={language} />} />
+          <Route path="/studio" element={<Studio language={language} />} />
+          <Route path="/contact" element={<Contact language={language} />} />
           <Route path="/admin/login" element={<AdminLogin darkMode={darkMode} />} />
           <Route path="/admin/dashboard" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
           <Route path="/admin/projects" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
@@ -75,7 +75,7 @@ const App: React.FC = () => {
           <Route path="/admin/site-settings" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
           <Route path="/admin/messages" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
           <Route path="/admin/messages/reply/:id" element={<AdminDashboard darkMode={darkMode} toggleDarkMode={toggleDarkMode} language={language} toggleLanguage={toggleLanguage} />} />
-          <Route path="/work/:id" element={<ProjectDetail />} />
+          <Route path="/work/:id" element={<ProjectDetail language={language} />} />
         </Routes>
       </main>
 

@@ -22,6 +22,7 @@ namespace ArchiPortfolio.Application
 
             // YENİ: ContactMessage Servisi (Eklemeyi unutmuyoruz)
             services.AddScoped<IContactMessageService, ContactMessageService>();
+            services.AddScoped<IReferenceService, ReferenceService>();
 
             return services;
         }

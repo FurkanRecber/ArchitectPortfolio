@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Search,
-    ChevronDown,
     Reply,
-    Archive,
     Trash2,
-    ArrowDown
+    Mail
 } from 'lucide-react';
 import { contactService } from '../../services/contactService'; // Servisi import et
 
@@ -24,16 +22,23 @@ export interface Message {
     content: string;
     status: string;
     email?: string;
+    isRead?: boolean;
 }
 
-const AdminMessages: React.FC = () => {
+import { translations } from '../../translations';
+
+interface AdminMessagesProps {
+    language?: 'EN' | 'TR';
+}
+
+
+const AdminMessages: React.FC<AdminMessagesProps> = ({ language = 'EN' }) => {
     const navigate = useNavigate();
     const [messages, setMessages] = useState<Message[]>([]); // Veriyi state'te tutuyoruz
-    const [activeMessageId, setActiveMessageId] = useState<number | null>(null);
     const [filter, setFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
-    const [visibleCount, setVisibleCount] = useState(5);
+    const t = translations[language].admin.messages;
 
     useEffect(() => {
         const fetchMessages = async () => {
@@ -53,7 +58,8 @@ const AdminMessages: React.FC = () => {
                     preview: msg.message ? msg.message.substring(0, 100) + '...' : '',
                     content: msg.message || '',
                     status: msg.isRead ? 'read' : 'unread',
-                    email: msg.email
+                    email: msg.email,
+                    isRead: msg.isRead // Ensure isRead property exists if used
                 }));
 
                 setMessages(formattedMessages);
@@ -68,218 +74,138 @@ const AdminMessages: React.FC = () => {
     }, []);
 
     // Okundu olarak işaretle
-    const toggleMessage = async (id: number) => {
-        if (activeMessageId === id) {
-            setActiveMessageId(null);
-        } else {
-            setActiveMessageId(id);
+    const handleMarkAsRead = async (id: number) => {
+        try {
+            await contactService.markAsRead(id);
+            setMessages(prev => prev.map(msg => msg.id === id ? { ...msg, isRead: true, status: 'read' } : msg));
+        } catch (error) {
+            console.error("İşlem başarısız:", error);
+        }
+    };
 
-            // Eğer mesaj okunmamışsa Backend'e bildir
-            const msg = messages.find(m => m.id === id);
-            if (msg && msg.status === 'unread') {
-                try {
-                    // Servis dosyanı güncellemen gerekebilir: markAsRead metodu lazım
-                    await contactService.markAsRead(id);
-
-                    // State'i güncelle
-                    setMessages(prev => prev.map(m =>
-                        m.id === id ? { ...m, status: 'read' } : m
-                    ));
-                } catch (err) {
-                    console.error(err);
-                }
+    // Silme işlemi
+    const handleDelete = async (id: number, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (window.confirm(t.confirmDelete)) {
+            try {
+                // Assuming deleteMessage exists in contactService
+                await contactService.deleteMessage(id);
+                setMessages(prev => prev.filter(msg => msg.id !== id));
+            } catch (error) {
+                console.error("Silme hatası:", error);
             }
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm("Mesajı silmek istediğinize emin misiniz?")) {
-            try {
-                // await contactService.deleteMessage(id); // Delete metodu varsa
-                setMessages(prev => prev.filter(m => m.id !== id));
-            } catch (err) {
-                console.error(err);
-            }
-        }
-    }
-
+    // Filtreleme
     const filteredMessages = messages.filter(msg => {
-        // 1. Tab Filter
-        let matchesTab = false;
-        if (filter === 'all') matchesTab = msg.status !== 'archived';
-        else if (filter === 'unread') matchesTab = msg.status === 'unread';
-        else if (filter === 'archived') matchesTab = msg.status === 'archived';
+        const matchesSearch = msg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (msg.email && msg.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            msg.subject.toLowerCase().includes(searchQuery.toLowerCase());
 
-        if (!matchesTab) return false;
-
-        // 2. Search Filter
-        if (!searchQuery) return true;
-        const query = searchQuery.toLowerCase();
-        return (
-            msg.name.toLowerCase().includes(query) ||
-            msg.subject.toLowerCase().includes(query) ||
-            msg.projectType.toLowerCase().includes(query) ||
-            msg.preview.toLowerCase().includes(query)
-        );
+        if (filter === 'unread') return matchesSearch && !msg.isRead;
+        // Important filtresi şimdilik yok
+        return matchesSearch;
     });
 
-    if (loading) return <div className="p-8 text-center text-zinc-500">Loading messages...</div>;
+    if (loading) return <div className="p-8 text-center text-zinc-500">{t.loading}</div>;
 
     return (
-        <div className="flex-1 flex flex-col h-full overflow-hidden bg-zinc-50 dark:bg-[#0B0E14] transition-colors duration-500">
-            {/* Header */}
-            <div className="p-8 pb-0">
-                <h1 className="text-3xl font-bold text-zinc-900 dark:text-white tracking-tight mb-2">INQUIRIES</h1>
-                <p className="text-zinc-500 dark:text-slate-400">Manage your incoming project requests and messages.</p>
-            </div>
-
-            {/* Toolbar */}
-            <div className="px-8 py-6">
-                <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-                    {/* Search */}
-                    <div className="relative w-full md:w-96">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-slate-500" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search by sender, keyword or project type..."
-                            value={searchQuery}
-                            onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                setVisibleCount(5);
-                            }}
-                            className="w-full bg-zinc-100 dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-lg pl-10 pr-4 py-2.5 text-sm text-zinc-900 dark:text-slate-200 focus:outline-none focus:border-zinc-300 dark:focus:border-[#2A303C] placeholder-zinc-400 dark:placeholder-slate-600"
-                        />
-                    </div>
-
-                    {/* Filter Tabs */}
-                    <div className="flex items-center bg-zinc-100 dark:bg-[#151922] rounded-lg p-1 border border-zinc-200 dark:border-[#1F2430]">
-                        <FilterTab label="All Messages" active={filter === 'all'} onClick={() => { setFilter('all'); setVisibleCount(5); }} />
-                        <FilterTab label="Unread" count={messages.filter(m => m.status === 'unread').length} active={filter === 'unread'} onClick={() => { setFilter('unread'); setVisibleCount(5); }} />
-                        <FilterTab label="Archived" active={filter === 'archived'} onClick={() => { setFilter('archived'); setVisibleCount(5); }} />
-                    </div>
+        <div className="flex-1 overflow-y-auto p-8 h-full bg-zinc-50 dark:bg-[#0B0E14]">
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-1">{t.title}</h1>
+                    <p className="text-sm text-zinc-500 dark:text-slate-400">{filteredMessages.length} {t.title.toLowerCase()}</p>
                 </div>
             </div>
 
-            {/* Message List */}
-            <div className="flex-1 overflow-y-auto px-8 pb-8 space-y-4">
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+                    <input
+                        type="text"
+                        placeholder={t.searchPlaceholder}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#2A303C] rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all dark:text-white"
+                    />
+                </div>
+                <div className="flex bg-white dark:bg-[#151922] p-1 rounded-xl border border-zinc-200 dark:border-[#2A303C]">
+                    <button
+                        onClick={() => setFilter('all')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'all' ? 'bg-zinc-100 dark:bg-[#1F2430] text-zinc-900 dark:text-white' : 'text-zinc-500 hover:text-zinc-900 dark:text-slate-400 dark:hover:text-white'}`}
+                    >
+                        {t.filter.all}
+                    </button>
+                    <button
+                        onClick={() => setFilter('unread')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'unread' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-900 dark:text-slate-400 dark:hover:text-white'}`}
+                    >
+                        {t.filter.unread}
+                    </button>
+                    <button
+                        onClick={() => setFilter('important')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'important' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' : 'text-zinc-500 hover:text-zinc-900 dark:text-slate-400 dark:hover:text-white'}`}
+                    >
+                        {t.filter.important}
+                    </button>
+                </div>
+            </div>
+
+            <div className="space-y-4">
                 {filteredMessages.length === 0 ? (
-                    <div className="text-center py-10 text-zinc-400">No messages found.</div>
+                    <div className="text-center py-12 bg-white dark:bg-[#151922] rounded-xl border border-dashed border-zinc-300 dark:border-[#2A303C]">
+                        <Mail className="w-12 h-12 text-zinc-300 mx-auto mb-3" />
+                        <p className="text-zinc-500">{t.empty}</p>
+                    </div>
                 ) : (
-                    filteredMessages.slice(0, visibleCount).map((msg) => (
+                    filteredMessages.map((msg) => (
                         <div
                             key={msg.id}
-                            className={`bg-white dark:bg-[#151922] border rounded-2xl transition-all duration-300 overflow-hidden ${activeMessageId === msg.id
-                                ? 'border-blue-500/30 shadow-lg shadow-blue-500/5'
-                                : 'border-zinc-200 dark:border-[#1F2430] hover:border-zinc-300 dark:hover:border-[#2A303C]'
-                                }`}
+                            onClick={() => {
+                                handleMarkAsRead(msg.id);
+                                navigate(`/admin/messages/reply/${msg.id}`);
+                            }}
+                            className={`group relative bg-white dark:bg-[#151922] p-5 rounded-xl border transition-all cursor-pointer hover:shadow-md ${!msg.isRead ? 'border-blue-200 dark:border-blue-900/30 bg-blue-50/30 dark:bg-blue-900/5' : 'border-zinc-200 dark:border-[#2A303C] hover:border-blue-300 dark:hover:border-blue-800'}`}
                         >
-                            {/* Message Header / Summary */}
-                            <div
-                                className="p-4 flex items-center gap-4 cursor-pointer"
-                                onClick={() => toggleMessage(msg.id)}
-                            >
-                                <div className="relative">
-                                    <img src={msg.avatar} alt={msg.name} className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-[#1F2430]" />
-                                    {msg.status === 'unread' && (
-                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 border-2 border-white dark:border-[#151922] rounded-full"></div>
+                            <div className="flex justify-between items-start mb-2">
+                                <div className="flex items-center gap-3">
+                                    {!msg.isRead && (
+                                        <span className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-pulse shadow-sm shadow-blue-500/50"></span>
                                     )}
+                                    <h3 className={`text-base font-semibold ${!msg.isRead ? 'text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-slate-300'}`}>
+                                        {msg.name}
+                                    </h3>
+                                    <span className="text-xs text-zinc-400 bg-zinc-100 dark:bg-[#1F2430] px-2 py-0.5 rounded-full border border-zinc-200 dark:border-[#2A303C]">{msg.email}</span>
                                 </div>
-
-                                <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                                    <div className="col-span-3">
-                                        <h3 className="font-semibold text-zinc-900 dark:text-white truncate">{msg.name}</h3>
-                                    </div>
-
-                                    <div className="col-span-8">
-                                        {activeMessageId !== msg.id && (
-                                            <p className="text-sm text-zinc-500 dark:text-slate-500 truncate">{msg.preview}</p>
-                                        )}
-                                    </div>
-
-                                    <div className="col-span-1 text-right">
-                                        <span className="text-xs text-zinc-400 dark:text-slate-500 whitespace-nowrap">{msg.timestamp}</span>
-                                    </div>
-                                </div>
-
-                                <div className="ml-2 text-zinc-400">
-                                    <ChevronDown size={20} className={`transition-transform duration-300 ${activeMessageId === msg.id ? 'rotate-180' : ''}`} />
-                                </div>
+                                <span className="text-xs font-medium text-zinc-400 whitespace-nowrap ml-4">
+                                    {new Date(msg.timestamp).toLocaleDateString(language === 'TR' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                </span>
                             </div>
 
-                            {/* Expanded Content */}
-                            {activeMessageId === msg.id && (
-                                <div className="px-6 pb-6 pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <div className="border-t border-zinc-100 dark:border-[#1F2430] pt-6 mb-6">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white">{msg.subject}</h2>
-                                            <div className="flex gap-2">
-                                                <button className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1f2430] rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-slate-300 transition-colors" title="Archive">
-                                                    <Archive size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleDelete(msg.id); }}
-                                                    className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Delete">
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div className="prose prose-sm dark:prose-invert max-w-none text-zinc-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                                            {msg.content}
-                                        </div>
-                                        {msg.email && (
-                                            <div className="mt-4 text-sm text-zinc-400">
-                                                Reply to: <a href={`mailto:${msg.email}`} className="text-blue-500 hover:underline">{msg.email}</a>
-                                            </div>
-                                        )}
-                                    </div>
+                            <h4 className="text-sm font-medium text-zinc-800 dark:text-slate-200 mb-1">{msg.subject}</h4>
+                            <p className="text-sm text-zinc-500 dark:text-slate-400 line-clamp-2 pr-12">{msg.content}</p>
 
-                                    <div className="flex gap-3 pt-2">
-                                        <button
-                                            onClick={() => navigate(`/admin/messages/reply/${msg.id}`)}
-                                            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-600/20"
-                                        >
-                                            <Reply size={16} />
-                                            <span>Reply to {msg.name.split(' ')[0]}</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+                            <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                <button
+                                    onClick={(e) => handleDelete(msg.id, e)}
+                                    className="p-2 bg-white dark:bg-[#1F2430] text-zinc-400 hover:text-red-500 border border-zinc-200 dark:border-[#2A303C] rounded-lg shadow-sm hover:bg-zinc-50 dark:hover:bg-[#2A303C] transition-colors"
+                                    title="Delete"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                                <button className="p-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 transition-colors">
+                                    <Reply size={16} />
+                                </button>
+                            </div>
                         </div>
-                    )))}
-
-                <div className="flex justify-center py-4">
-                    {filteredMessages.length > visibleCount && (
-                        <button
-                            onClick={() => setVisibleCount(prev => prev + 5)}
-                            className="flex items-center gap-2 text-sm text-zinc-500 dark:text-slate-500 hover:text-zinc-800 dark:hover:text-slate-300 transition-colors"
-                        >
-                            <span>Load more messages</span>
-                            <ArrowDown size={14} />
-                        </button>
-                    )}
-                </div>
+                    ))
+                )}
             </div>
         </div>
     );
 };
 
-// Helper Components
-const FilterTab = ({ label, count, active, onClick }: { label: string, count?: number, active: boolean, onClick: () => void }) => (
-    <button
-        onClick={onClick}
-        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all relative ${active
-            ? 'bg-blue-600 text-white shadow-md'
-            : 'text-zinc-600 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-white'
-            }`}
-    >
-        {label}
-        {count !== undefined && count > 0 && (
-            <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-zinc-200 dark:bg-[#2A303C] text-zinc-600 dark:text-slate-400'
-                }`}>
-                {count}
-            </span>
-        )}
-    </button>
-);
+// Helper Components removed as they were unused
 
 export default AdminMessages;

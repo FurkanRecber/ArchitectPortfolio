@@ -5,10 +5,16 @@ import {
     Paperclip, Send, X
 } from 'lucide-react';
 import { contactService } from '../../services/contactService';
+import { translations } from '../../translations';
 
-const AdminReply: React.FC = () => {
+interface AdminReplyProps {
+    language?: 'EN' | 'TR';
+}
+
+const AdminReply: React.FC<AdminReplyProps> = ({ language = 'EN' }) => {
     const navigate = useNavigate();
     const { id } = useParams();
+    const t = translations[language].admin.messages.reply;
 
     // Referanslar
     const editorRef = useRef<HTMLDivElement>(null);
@@ -115,7 +121,7 @@ const AdminReply: React.FC = () => {
                 <button onClick={() => navigate('/admin/messages')} className="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-[#1F2430] text-zinc-500">
                     <ArrowLeft size={20} />
                 </button>
-                <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Reply to Inquiry</h1>
+                <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">{t.title}</h1>
             </header>
 
             <div className="flex-1 overflow-hidden px-8 pb-8">
@@ -125,7 +131,7 @@ const AdminReply: React.FC = () => {
                     <div className="lg:col-span-2 bg-white dark:bg-[#151922] border border-zinc-200 dark:border-[#1F2430] rounded-2xl p-6 flex flex-col h-full overflow-hidden">
                         <div className="mb-6 pb-6 border-b border-zinc-100 dark:border-[#1F2430]">
                             <div className="flex justify-between items-start mb-2">
-                                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Original Message From</span>
+                                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">{t.originalMessage}</span>
                                 <span className="text-[10px] bg-zinc-100 dark:bg-[#1A1D27] px-2 py-1 rounded text-zinc-500">INBOX</span>
                             </div>
                             <div className="font-bold text-lg text-zinc-900 dark:text-white mb-1">{message.name}</div>
@@ -152,14 +158,14 @@ const AdminReply: React.FC = () => {
                         {/* Yazı Alanı */}
                         <div className="p-6 flex-1 flex flex-col gap-4 overflow-hidden">
                             <div className="flex items-center gap-4">
-                                <label className="text-sm w-16 font-medium text-zinc-500">To:</label>
+                                <label className="text-sm w-16 font-medium text-zinc-500">{t.to}:</label>
                                 <span className="text-sm px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full font-medium">
                                     {message.email}
                                 </span>
                             </div>
 
                             <div className="flex items-center gap-4 border-b border-zinc-100 dark:border-[#1F2430] pb-2">
-                                <label className="text-sm w-16 font-medium text-zinc-500">Subject:</label>
+                                <label className="text-sm w-16 font-medium text-zinc-500">{t.subject}:</label>
                                 <input
                                     value={replySubject}
                                     onChange={(e) => setReplySubject(e.target.value)}
@@ -206,7 +212,7 @@ const AdminReply: React.FC = () => {
                                 disabled={loading}
                                 className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:translate-y-[-1px]"
                             >
-                                <span>{loading ? 'Sending...' : 'Send Reply'}</span>
+                                <span>{loading ? t.sending : t.send}</span>
                                 <Send size={16} />
                             </button>
                         </div>

@@ -61,20 +61,89 @@ namespace ArchiPortfolio.Application.Services
             return dto;
         }
 
-        public async Task CheckAndCreateDefaultAsync()
-        {
-            var settings = await _repository.GetAllAsync();
-            if (!settings.Any())
-            {
-                await _repository.AddAsync(new SiteSetting 
-                { 
-                    SiteTitle = "Vivere Design",
-                    HeroTitle = "Architecture for Future", 
-                    Email = "info@vivere.design" 
-                });
-                await _repository.SaveChangesAsync();
-            }
-        }
+       public async Task CheckAndCreateDefaultAsync()
+{
+    var settings = await _repository.GetAllAsync();
+    if (!settings.Any())
+    {
+        // VERİTABANI MUTSUZ OLMASIN DİYE HER ŞEYİ DOLDURUYORUZ
+        await _repository.AddAsync(new SiteSetting 
+        { 
+            // 1. Temel Bilgiler (Dolu olsun)
+            SiteTitle = "Vivere Design",
+            HeroTitle = "Architecture for Future", 
+            Email = "info@vivere.design",
+            RobotsTxt = "User-agent: *\nDisallow:",
+
+            // 2. İletişim (HATAYI ÇÖZEN KISIM)
+            Address = "",           // <-- İşte patlayan yer burasıydı
+            AddressTr = "",
+            Phone = "",
+            GoogleMapEmbedCode = "",
+
+            // 3. Sosyal Medya
+            FacebookUrl = "",
+            InstagramUrl = "",
+            LinkedinUrl = "",
+            YoutubeUrl = "",
+
+            // 4. Genel & Footer
+            CopyrightText = "",
+            CopyrightTextTr = "",
+            FooterDescription = "",
+            FooterDescriptionTr = "",
+
+            // 5. Hero Diğer
+            HeroTitleTr = "",
+            HeroSubtitle = "",
+            HeroSubtitleTr = "",
+            HeroButtonText = "",
+            HeroButtonTextTr = "",
+            HeroImageUrl = "", // Resim URL'leri de string olduğu için boş verelim
+            LogoUrl = "",
+
+            // 6. CTA (Call to Action)
+            CtaTitle = "",
+            CtaTitleTr = "",
+            CtaDescription = "",
+            CtaDescriptionTr = "",
+            CtaButtonText = "",
+            CtaButtonTextTr = "",
+
+            // 7. Studio - About
+            AboutTitle = "",
+            AboutTitleTr = "",
+            AboutDescription = "",
+            AboutDescriptionTr = "",
+            AboutImageUrl = "",
+
+            // 8. Studio - Felsefe (Yeni Eklediklerin)
+            PhilosophySectionTitle = "",
+            PhilosophySectionTitleTr = "",
+            
+            Philo1Title = "", Philo1TitleTr = "", Philo1Desc = "", Philo1DescTr = "", Philo1IconUrl = "",
+            Philo2Title = "", Philo2TitleTr = "", Philo2Desc = "", Philo2DescTr = "", Philo2IconUrl = "",
+            Philo3Title = "", Philo3TitleTr = "", Philo3Desc = "", Philo3DescTr = "", Philo3IconUrl = "",
+
+            // 9. Metrikler
+            Metric1Title = "", Metric1TitleTr = "", Metric1Value = "",
+            Metric2Title = "", Metric2TitleTr = "", Metric2Value = "",
+            Metric3Title = "", Metric3TitleTr = "", Metric3Value = "",
+
+            // 10. SEO & Scripts
+            MetaKeywords = "",
+            MetaKeywordsTr = "",
+            HeadScripts = "",
+            GoogleAnalyticsId = "",
+            GoogleTagManagerId = "",
+            
+            // Video
+            ShowreelUrl = ""
+        });
+        
+        await _repository.SaveChangesAsync();
+    }
+}
 
         public async Task UpdateSettingsAsync(UpdateSiteSettingDto dto)
         {

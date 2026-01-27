@@ -1,35 +1,59 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { translations } from '../translations';
+import { referenceService, type Reference } from '../services/referenceService';
+import { getImageUrl } from '../utils/imageUrlHelper';
 
-const Clients: React.FC = () => {
-    const clients = [
-        { name: 'Aesop', style: 'font-serif tracking-tight text-3xl md:text-4xl' },
-        { name: 'Herman Miller', style: 'font-sans font-bold tracking-tight uppercase text-lg md:text-xl' },
-        { name: 'Vitra.', style: 'font-serif font-bold text-2xl md:text-3xl tracking-tighter' },
-        { name: 'Bang & Olufsen', style: 'font-sans font-light tracking-[0.2em] uppercase text-xs md:text-sm' },
-        { name: 'MONOCLE', style: 'font-serif font-bold text-xl md:text-2xl tracking-wide bg-black text-white px-2 py-1 dark:bg-white dark:text-black' },
-    ];
+interface ClientsProps {
+    language?: 'EN' | 'TR';
+}
+
+const Clients: React.FC<ClientsProps> = ({ language = 'EN' }) => {
+    const t = translations[language].home;
+    const [references, setReferences] = useState<Reference[]>([]);
+
+    useEffect(() => {
+        const fetchReferences = async () => {
+            try {
+                const data = await referenceService.getAll();
+                // Filter active references and sort by order
+                const activeRefs = data.filter(r => r.isActive).sort((a, b) => a.order - b.order);
+                setReferences(activeRefs);
+            } catch (error) {
+                console.error('Error fetching references:', error);
+            }
+        };
+
+        fetchReferences();
+    }, []);
+
+    if (references.length === 0) {
+        return null;
+    }
 
     return (
         <section className="py-24 px-6 md:px-16 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors duration-500 border-t border-zinc-200 dark:border-white/5">
             <div className="max-w-7xl mx-auto text-center">
                 <span className="text-zinc-400 text-xs font-bold tracking-[0.2em] uppercase block mb-12">
-                    Trusted by Industry Leaders
+                    {t.clientsTitle}
                 </span>
 
                 <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
-                    {clients.map((client, idx) => (
+                    {references.map((ref, idx) => (
                         <motion.div
-                            key={idx}
+                            key={ref.id}
                             initial={{ opacity: 0, y: 10 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: idx * 0.1 }}
-                            className="opacity-50 hover:opacity-100 transition-all duration-300 cursor-default"
+                            className="cursor-default"
                         >
-                            <span className={`${client.style} whitespace-nowrap`}>
-                                {client.name}
-                            </span>
+                            <img
+                                src={getImageUrl(ref.logoUrl)}
+                                alt={ref.title}
+                                title={ref.title}
+                                className="h-12 md:h-20 w-auto object-contain transition-all duration-300 filter grayscale invert dark:invert-0"
+                            />
                         </motion.div>
                     ))}
                 </div>
