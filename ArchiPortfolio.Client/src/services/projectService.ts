@@ -39,7 +39,6 @@ export const projectService = {
         // ID, FormData'nın içinde olmalı. PUT isteği yapıyoruz.
         await axios.put(API_URL, projectData, {
             headers: {
-                'Content-Type': 'multipart/form-data',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
         });

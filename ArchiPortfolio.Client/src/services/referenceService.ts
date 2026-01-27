@@ -31,7 +31,6 @@ export const referenceService = {
     add: async (formData: FormData) => {
         const response = await axios.post(`${API_URL}/references`, formData, {
             headers: {
-                'Content-Type': 'multipart/form-data',
                 ...getAuthHeaders()
             }
         });
@@ -41,7 +40,6 @@ export const referenceService = {
     update: async (id: number, formData: FormData) => {
         const response = await axios.put(`${API_URL}/references/${id}`, formData, {
             headers: {
-                'Content-Type': 'multipart/form-data',
                 ...getAuthHeaders()
             }
         });

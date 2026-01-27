@@ -53,9 +53,29 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ darkMode, toggleDarkMod
     const [, setLoading] = useState(true);
 
     // 1. Güvenlik Kontrolü
+    // 1. Güvenlik Kontrolü
     useEffect(() => {
-        if (!authService.isAuthenticated()) {
-            navigate('/admin/login');
+        // Token var mı ve geçerli mi?
+        const token = authService.getToken();
+
+        if (!token || token === 'undefined') {
+            authService.logout();
+            return;
+        }
+
+        // Basit bir JWT parse işlemi (Expiration kontrolü için)
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const exp = payload.exp * 1000; // JWT exp saniye cinsindendir
+
+            if (Date.now() >= exp) {
+                console.warn("Token expired, redirecting to login.");
+                authService.logout();
+                return;
+            }
+        } catch (e) {
+            console.error("Invalid token format", e);
+            authService.logout();
         }
     }, [navigate]);
 

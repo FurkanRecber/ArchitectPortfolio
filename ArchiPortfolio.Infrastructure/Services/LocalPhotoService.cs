@@ -16,32 +16,44 @@ namespace ArchiPortfolio.Infrastructure.Services
             _env = env;
         }
 
-        // Interface: Task<string> UploadPhotoAsync(IFormFile photo)
-        public async Task<string> UploadPhotoAsync(IFormFile photo)
+        // Interface: Task<string> UploadPhotoAsync(IFormFile photo, string folderName)
+        public async Task<string> UploadPhotoAsync(IFormFile photo, string folderName)
         {
-            if (photo == null || photo.Length == 0) return null;
+            if (photo == null || photo.Length == 0)
+                return null;
 
-            // 1. Dosya ismini oluştur
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(photo.FileName);
-            
-            // 2. Klasör yolunu belirle (Garanti yöntem)
-            // WebRootPath bazen null gelebilir, o yüzden manuel kontrol ekliyoruz
-            string webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var uploadPath = Path.Combine(webRootPath, "uploads");
-            
-            // Klasör yoksa oluştur
-            if (!Directory.Exists(uploadPath))
-                Directory.CreateDirectory(uploadPath);
+            // 1) uploads klasörünün fiziksel yolunu bul
+            var uploadsFolderPath = Path.Combine(_env.WebRootPath, "uploads");
 
-            // 3. Dosyayı kaydet
-            var filePath = Path.Combine(uploadPath, fileName);
+            // 2) Alt klasör belirlendiyse path'e ekle
+            if (!string.IsNullOrEmpty(folderName))
+            {
+                uploadsFolderPath = Path.Combine(uploadsFolderPath, folderName);
+            }
+
+            // 3) Klasör yoksa oluştur
+            if (!Directory.Exists(uploadsFolderPath))
+            {
+                Directory.CreateDirectory(uploadsFolderPath);
+            }
+
+            // 4) Unique dosya adı oluştur
+            var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(photo.FileName);
+
+            // 5) Tam dosya yolu
+            var filePath = Path.Combine(uploadsFolderPath, uniqueFileName);
+
+            // 6) Kaydet
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await photo.CopyToAsync(stream);
             }
 
-            // 4. Web yolunu döndür
-            return $"/uploads/{fileName}";
+            // 7) URL döndür (örn: "uploads/projects/xyz.jpg")
+            // Path.Combine kullanınca ters slash (\) gelebilir, web için (/) çevirelim
+            var returnPath = Path.Combine("uploads", folderName ?? "", uniqueFileName).Replace("\\", "/");
+            
+            return returnPath;
         }
 
         // Interface: void DeletePhoto(string photoUrl)

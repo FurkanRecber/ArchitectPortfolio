@@ -55,7 +55,7 @@ namespace ArchiPortfolio.Application.Services
             if (createDto.CoverImage != null)
             {
                 // UploadPhotoAsync metodu direkt string döner (URL)
-                var photoUrl = await _photoService.UploadPhotoAsync(createDto.CoverImage);
+                var photoUrl = await _photoService.UploadPhotoAsync(createDto.CoverImage, "categories");
                 category.CoverImageUrl = photoUrl;
             }
 
@@ -86,7 +86,7 @@ namespace ArchiPortfolio.Application.Services
                     _photoService.DeletePhoto(category.CoverImageUrl);
                 }
 
-                var photoUrl = await _photoService.UploadPhotoAsync(updateDto.CoverImage);
+                var photoUrl = await _photoService.UploadPhotoAsync(updateDto.CoverImage, "categories");
                 category.CoverImageUrl = photoUrl;
             }
 

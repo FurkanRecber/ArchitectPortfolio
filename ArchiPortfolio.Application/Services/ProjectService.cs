@@ -142,7 +142,7 @@ namespace ArchiPortfolio.Application.Services
             _photoService.DeletePhoto(project.CoverImageUrl);
         }
         // Yeni resmi yükle
-        project.CoverImageUrl = await _photoService.UploadPhotoAsync(dto.CoverImage);
+        project.CoverImageUrl = await _photoService.UploadPhotoAsync(dto.CoverImage, "projects");
     }
 
     // 4. YENİ GALERİ RESİMLERİ EKLEME
@@ -150,7 +150,7 @@ namespace ArchiPortfolio.Application.Services
     {
         foreach (var file in dto.GalleryImages)
         {
-            var url = await _photoService.UploadPhotoAsync(file);
+            var url = await _photoService.UploadPhotoAsync(file, "projects");
             project.ProjectImages.Add(new ProjectImage 
             { 
                 ImageUrl = url, 

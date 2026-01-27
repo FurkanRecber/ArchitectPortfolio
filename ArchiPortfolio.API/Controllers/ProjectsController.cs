@@ -86,7 +86,7 @@ namespace ArchiPortfolio.API.Controllers
             // 1. Kapak Resmi Yükleme
             if (model.CoverImage != null)
             {
-                project.CoverImageUrl = await _photoService.UploadPhotoAsync(model.CoverImage);
+                project.CoverImageUrl = await _photoService.UploadPhotoAsync(model.CoverImage, "projects");
             }
 
             // 2. Galeri Resimlerini Yükleme (BU KISIM EKLENDİ)
@@ -97,7 +97,7 @@ namespace ArchiPortfolio.API.Controllers
                 foreach (var file in model.GalleryImages)
                 {
                     // Her dosyayı yükle
-                    var galleryUrl = await _photoService.UploadPhotoAsync(file);
+                    var galleryUrl = await _photoService.UploadPhotoAsync(file, "projects");
                     
                     // Listeye ekle
                     project.ProjectImages.Add(new ProjectImage 

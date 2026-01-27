@@ -35,7 +35,7 @@ namespace ArchiPortfolio.Application.Services
         {
             if (logoFile != null)
             {
-                reference.LogoUrl = await _photoService.UploadPhotoAsync(logoFile);
+                reference.LogoUrl = await _photoService.UploadPhotoAsync(logoFile, "references");
             }
             await _repository.AddAsync(reference);
             await _repository.SaveChangesAsync();
@@ -58,7 +58,7 @@ namespace ArchiPortfolio.Application.Services
                 {
                     _photoService.DeletePhoto(existing.LogoUrl);
                 }
-                existing.LogoUrl = await _photoService.UploadPhotoAsync(logoFile);
+                existing.LogoUrl = await _photoService.UploadPhotoAsync(logoFile, "references");
             }
 
             _repository.Update(existing);

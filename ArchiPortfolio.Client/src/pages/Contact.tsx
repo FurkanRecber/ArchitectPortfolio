@@ -11,6 +11,17 @@ interface PageProps {
     language?: 'EN' | 'TR';
 }
 
+// Harita bileşenini ayırıp memoize ediyoruz
+const MapComponent = React.memo(({ embedCode }: { embedCode?: string }) => {
+    if (!embedCode) return null;
+    return (
+        <div
+            className="w-full h-64 bg-zinc-100 rounded-lg overflow-hidden grayscale hover:grayscale-0 transition-all duration-500"
+            dangerouslySetInnerHTML={{ __html: embedCode }}
+        />
+    );
+});
+
 const Contact: React.FC<PageProps> = ({ language = 'EN' }) => {
     const [settings, setSettings] = useState<SiteSetting | null>(null);
     const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
@@ -95,13 +106,8 @@ const Contact: React.FC<PageProps> = ({ language = 'EN' }) => {
                         )}
                     </div>
 
-                    {/* Google Maps Embed (Eğer varsa) */}
-                    {settings?.googleMapEmbedCode && (
-                        <div
-                            className="w-full h-64 bg-zinc-100 rounded-lg overflow-hidden grayscale hover:grayscale-0 transition-all duration-500"
-                            dangerouslySetInnerHTML={{ __html: settings.googleMapEmbedCode }}
-                        />
-                    )}
+                    {/* Google Maps Embed (Memoized) */}
+                    <MapComponent embedCode={settings?.googleMapEmbedCode} />
                 </div>
 
                 {/* Sağ Taraf: Form (Aynen Kalıyor) */}

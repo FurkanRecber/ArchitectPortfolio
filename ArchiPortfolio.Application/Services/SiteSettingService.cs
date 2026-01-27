@@ -164,33 +164,33 @@ namespace ArchiPortfolio.Application.Services
             if (dto.LogoImage != null)
             {
                 // Eski logoyu silme işlemi opsiyonel, hata vermemesi için şimdilik koymuyorum.
-                setting.LogoUrl = await _photoService.UploadPhotoAsync(dto.LogoImage);
+                setting.LogoUrl = await _photoService.UploadPhotoAsync(dto.LogoImage, "settings");
             }
 
             if (dto.HeroImage != null)
             {
-                setting.HeroImageUrl = await _photoService.UploadPhotoAsync(dto.HeroImage);
+                setting.HeroImageUrl = await _photoService.UploadPhotoAsync(dto.HeroImage, "settings");
             }
             if (dto.AboutImage != null)
             {
                 if (!string.IsNullOrEmpty(setting.AboutImageUrl)) _photoService.DeletePhoto(setting.AboutImageUrl);
-                setting.AboutImageUrl = await _photoService.UploadPhotoAsync(dto.AboutImage);
+                setting.AboutImageUrl = await _photoService.UploadPhotoAsync(dto.AboutImage, "settings");
             }
             
             if (dto.Philo1Icon != null) {
                 if (!string.IsNullOrEmpty(setting.Philo1IconUrl)) _photoService.DeletePhoto(setting.Philo1IconUrl);
-                setting.Philo1IconUrl = await _photoService.UploadPhotoAsync(dto.Philo1Icon);
+                setting.Philo1IconUrl = await _photoService.UploadPhotoAsync(dto.Philo1Icon, "settings");
             }
             // İkon 2
             if (dto.Philo2Icon != null) {
                 if (!string.IsNullOrEmpty(setting.Philo2IconUrl)) _photoService.DeletePhoto(setting.Philo2IconUrl);
-                setting.Philo2IconUrl = await _photoService.UploadPhotoAsync(dto.Philo2Icon);
+                setting.Philo2IconUrl = await _photoService.UploadPhotoAsync(dto.Philo2Icon, "settings");
             }
             // İkon 3
             if (dto.Philo3Icon != null)
             {
                 if (!string.IsNullOrEmpty(setting.Philo3IconUrl)) _photoService.DeletePhoto(setting.Philo3IconUrl);
-                setting.Philo3IconUrl = await _photoService.UploadPhotoAsync(dto.Philo3Icon);
+                setting.Philo3IconUrl = await _photoService.UploadPhotoAsync(dto.Philo3Icon, "settings");
             }
 
             _repository.Update(setting);
