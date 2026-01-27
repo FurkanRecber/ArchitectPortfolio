@@ -1,5 +1,8 @@
 namespace ArchiPortfolio.Application.DTOs
 {
+    /// <summary>
+    /// Data transfer object for user login requests.
+    /// </summary>
     public class LoginDto
     {
         public string Username { get; set; }
