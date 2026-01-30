@@ -78,11 +78,10 @@ const AdminNewCategory: React.FC<AdminNewCategoryProps> = ({ language = 'EN' }) 
         }
     };
 
-    const handleSubmit = async () => {
-        if (!name) {
-            alert("Please enter a category name.");
-            return;
-        }
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        // Manual validation removed to rely on backend validation
+        // if (!name) { alert... }
         setLoading(true);
 
         try {
@@ -108,9 +107,10 @@ const AdminNewCategory: React.FC<AdminNewCategoryProps> = ({ language = 'EN' }) 
             }
             navigate('/admin/categories');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Hata:", error);
-            alert("İşlem başarısız.");
+            const msg = error.message || "İşlem başarısız.";
+            alert(msg);
         } finally {
             setLoading(false);
         }
@@ -130,12 +130,12 @@ const AdminNewCategory: React.FC<AdminNewCategoryProps> = ({ language = 'EN' }) 
             </div>
 
             <div className="flex-1 p-8 flex justify-center">
-                <div className="w-full max-w-4xl space-y-8">
+                <form onSubmit={handleSubmit} className="w-full max-w-4xl space-y-8">
 
                     {/* Hero Section */}
                     <div className="flex flex-col items-center text-center space-y-4 mb-8">
                         <div className="flex items-center gap-4">
-                            <button onClick={() => navigate('/admin/categories')} className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-full transition-colors">
+                            <button type="button" onClick={() => navigate('/admin/categories')} className="p-2 hover:bg-zinc-100 dark:hover:bg-[#1F2430] rounded-full transition-colors">
                                 <ArrowLeft size={20} className="text-zinc-600 dark:text-slate-400" />
                             </button>
                             <div>
@@ -156,8 +156,9 @@ const AdminNewCategory: React.FC<AdminNewCategoryProps> = ({ language = 'EN' }) 
                             </h3>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-zinc-500 uppercase">{t.name}</label>
+                                <label className="text-xs font-bold uppercase text-zinc-500">{t.name}</label>
                                 <input
+                                    required
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="e.g. Residential"
@@ -166,8 +167,9 @@ const AdminNewCategory: React.FC<AdminNewCategoryProps> = ({ language = 'EN' }) 
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-zinc-500 uppercase">{t.description}</label>
+                                <label className="text-xs font-bold uppercase text-zinc-500">{t.description}</label>
                                 <textarea
+                                    required
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     rows={4}
@@ -182,6 +184,7 @@ const AdminNewCategory: React.FC<AdminNewCategoryProps> = ({ language = 'EN' }) 
                                 <div className="grid grid-cols-6 gap-2">
                                     {icons.map((item) => (
                                         <button
+                                            type="button" // Prevent form submission
                                             key={item.id}
                                             onClick={() => setSelectedIcon(item.id)}
                                             className={`aspect-square rounded-xl flex items-center justify-center transition-all ${selectedIcon === item.id
@@ -206,6 +209,7 @@ const AdminNewCategory: React.FC<AdminNewCategoryProps> = ({ language = 'EN' }) 
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-zinc-500 uppercase">{t.name} (TR)</label>
                                 <input
+                                    required
                                     value={nameTr}
                                     onChange={(e) => setNameTr(e.target.value)}
                                     placeholder="Örn. Konut"
@@ -216,6 +220,7 @@ const AdminNewCategory: React.FC<AdminNewCategoryProps> = ({ language = 'EN' }) 
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-zinc-500 uppercase">{t.description} (TR)</label>
                                 <textarea
+                                    required
                                     value={descriptionTr}
                                     onChange={(e) => setDescriptionTr(e.target.value)}
                                     rows={3}
@@ -256,13 +261,14 @@ const AdminNewCategory: React.FC<AdminNewCategoryProps> = ({ language = 'EN' }) 
                     {/* Footer Actions */}
                     <div className="flex justify-end gap-3 pt-6 border-t border-zinc-200 dark:border-[#1F2430]">
                         <button
+                            type="button"
                             onClick={() => navigate('/admin/categories')}
                             className="px-6 py-3 text-sm font-bold text-zinc-500 hover:text-zinc-900 dark:text-slate-400 dark:hover:text-white transition-colors"
                         >
                             {t.cancel}
                         </button>
                         <button
-                            onClick={handleSubmit}
+                            type="submit"
                             disabled={loading}
                             className="flex items-center gap-2 px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-xl text-sm font-bold shadow-lg hover:opacity-90 disabled:opacity-50 transition-all"
                         >
@@ -271,7 +277,7 @@ const AdminNewCategory: React.FC<AdminNewCategoryProps> = ({ language = 'EN' }) 
                         </button>
                     </div>
 
-                </div>
+                </form>
             </div>
         </div>
     );

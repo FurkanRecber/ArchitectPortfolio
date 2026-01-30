@@ -69,9 +69,10 @@ const AdminReply: React.FC<AdminReplyProps> = ({ language = 'EN' }) => {
             await contactService.replyToMessage(message.id, replySubject, finalContent);
             alert("Cevap başarıyla gönderildi!");
             navigate('/admin/messages');
-        } catch (error) {
+        } catch (error: any) {
             console.error("Gönderim hatası:", error);
-            alert("Mail gönderilemedi.");
+            const msg = error.message || "Mail gönderilemedi.";
+            alert(msg);
         } finally {
             setLoading(false);
         }

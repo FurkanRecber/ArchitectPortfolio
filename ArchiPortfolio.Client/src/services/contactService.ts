@@ -1,32 +1,30 @@
-import axios from 'axios';
+import api from './api';
 import type { ContactMessagePayload } from '../types';
-
-const API_URL = 'https://localhost:7179/api/contactmessages';
 
 export const contactService = {
     sendMessage: async (payload: ContactMessagePayload): Promise<void> => {
-        await axios.post(API_URL, payload);
+        await api.post('/contactmessages', payload);
     },
 
-    getAllMessages: async (): Promise<any[]> => { // Type olarak ContactMessageDto tanımlayabilirsin sonra
-        const response = await axios.get(API_URL); // GET isteği
+    getAllMessages: async (): Promise<any[]> => {
+        const response = await api.get('/contactmessages');
         return response.data;
     },
 
     markAsRead: async (id: number): Promise<void> => {
-        await axios.put(`${API_URL}/${id}/read`);
+        await api.put(`/contactmessages/${id}/read`);
     },
 
     getMessageById: async (id: number): Promise<any> => {
-        const response = await axios.get(`${API_URL}/${id}`);
+        const response = await api.get(`/contactmessages/${id}`);
         return response.data;
     },
 
     replyToMessage: async (id: number, subject: string, messageBody: string): Promise<void> => {
-        await axios.post(`${API_URL}/${id}/reply`, { subject, messageBody });
+        await api.post(`/contactmessages/${id}/reply`, { subject, messageBody });
     },
 
     deleteMessage: async (id: number): Promise<void> => {
-        await axios.delete(`${API_URL}/${id}`);
+        await api.delete(`/contactmessages/${id}`);
     }
 };

@@ -1,11 +1,9 @@
-import axios from 'axios';
+import api from './api';
 import type { LoginRequest, AuthResponse } from '../types';
-
-const API_URL = 'https://localhost:7179/api/auth'; // Portunu kontrol et
 
 export const authService = {
     login: async (credentials: LoginRequest): Promise<AuthResponse> => {
-        const response = await axios.post(`${API_URL}/login`, credentials);
+        const response = await api.post('/auth/login', credentials);
         console.log("Login response:", response.data);
         const token = response.data.accessToken || response.data.AccessToken;
 
@@ -28,8 +26,6 @@ export const authService = {
 
     isAuthenticated: () => {
         const token = localStorage.getItem('token');
-        // Burada token süresi dolmuş mu kontrolü de yapılabilir (JWT decode ile)
-        // Şimdilik sadece token var mı diye bakıyoruz.
         return !!token;
     }
 };

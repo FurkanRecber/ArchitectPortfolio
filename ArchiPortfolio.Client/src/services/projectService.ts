@@ -1,24 +1,21 @@
-import axios from 'axios';
+import api from './api';
 import type { Project } from '../types';
-
-// Port numaran (7179)
-const API_URL = 'https://localhost:7179/api/projects';
 
 export const projectService = {
     // --- OKUMA İŞLEMLERİ (MEVCUT) ---
     getAllProjects: async (lang: string = 'en'): Promise<Project[]> => {
-        const response = await axios.get(`${API_URL}?lang=${lang}`);
+        const response = await api.get(`/projects?lang=${lang}`);
         return response.data;
     },
 
     // DÜZELTME BURADA: id tipini 'number' olarak değiştirdik (veya string de gelebilir diye esnettik)
     getProjectById: async (id: number | string, lang: string = 'en'): Promise<Project> => {
-        const response = await axios.get(`${API_URL}/${id}?lang=${lang}`);
+        const response = await api.get(`/projects/${id}?lang=${lang}`);
         return response.data;
     },
 
     getFeaturedProjects: async (lang: string = 'en'): Promise<Project[]> => {
-        const response = await axios.get(`${API_URL}/featured?lang=${lang}`);
+        const response = await api.get(`/projects/featured?lang=${lang}`);
         return response.data;
     },
 
@@ -27,29 +24,17 @@ export const projectService = {
     // 1. Proje Ekle (Resim içerdiği için FormData kullanıyoruz)
     createProject: async (formData: FormData): Promise<void> => {
         // Content-Type: multipart/form-data otomatik ayarlanır
-        await axios.post(API_URL, formData, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}` // Token ekledik
-            }
-        });
+        await api.post('/projects', formData);
     },
 
     // 2. Proje Güncelle
     updateProject: async (projectData: FormData): Promise<void> => {
         // ID, FormData'nın içinde olmalı. PUT isteği yapıyoruz.
-        await axios.put(API_URL, projectData, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
+        await api.put('/projects', projectData);
     },
 
     // 3. Proje Sil
     deleteProject: async (id: number): Promise<void> => {
-        await axios.delete(`${API_URL}/${id}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
+        await api.delete(`/projects/${id}`);
     }
 };

@@ -41,9 +41,9 @@ const AdminProjects: React.FC<AdminProjectsProps> = ({ language = 'EN' }) => {
                 await projectService.deleteProject(id);
                 // Listeden de sil
                 setProjects(projects.filter(p => p.id !== id));
-            } catch (error) {
-                alert("Silme işlemi başarısız oldu.");
+            } catch (error: any) {
                 console.error(error);
+                alert(error.message || "Silme işlemi başarısız oldu.");
             }
         }
     };

@@ -91,8 +91,9 @@ const AdminMessages: React.FC<AdminMessagesProps> = ({ language = 'EN' }) => {
                 // Assuming deleteMessage exists in contactService
                 await contactService.deleteMessage(id);
                 setMessages(prev => prev.filter(msg => msg.id !== id));
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Silme hatası:", error);
+                alert(error.message || "Silme işlemi başarısız.");
             }
         }
     };

@@ -194,9 +194,10 @@ const AdminNewProject: React.FC<AdminNewProjectProps> = ({ language = 'EN' }) =>
                 navigate('/admin/projects');
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Hata:", error);
-            alert("Bir hata oluştu.");
+            const msg = error.message || "Bir hata oluştu.";
+            alert(msg);
         } finally {
             setLoading(false);
         }
@@ -225,7 +226,7 @@ const AdminNewProject: React.FC<AdminNewProjectProps> = ({ language = 'EN' }) =>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase text-zinc-500">{t.category}</label>
-                            <select name="categoryId" value={formData.categoryId} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white outline-none">
+                            <select required name="categoryId" value={formData.categoryId} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white outline-none">
                                 <option value="" disabled>{t.selectCategory}</option>
                                 {categories.map(cat => (
                                     <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -234,23 +235,23 @@ const AdminNewProject: React.FC<AdminNewProjectProps> = ({ language = 'EN' }) =>
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase text-zinc-500">{t.client}</label>
-                            <input name="client" value={formData.client} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
+                            <input required name="client" value={formData.client} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase text-zinc-500">{t.location}</label>
-                            <input name="location" value={formData.location} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
+                            <input required name="location" value={formData.location} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase text-zinc-500">{t.team}</label>
-                            <input name="projectTeam" value={formData.projectTeam} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
+                            <input required name="projectTeam" value={formData.projectTeam} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase text-zinc-500">{t.year}</label>
-                            <input type="number" name="projectYear" value={formData.projectYear} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
+                            <input required type="number" name="projectYear" value={formData.projectYear} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase text-zinc-500">{t.area}</label>
-                            <input name="area" value={formData.area} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
+                            <input required name="area" value={formData.area} onChange={handleInputChange} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase text-zinc-500">{t.status}</label>
@@ -284,11 +285,11 @@ const AdminNewProject: React.FC<AdminNewProjectProps> = ({ language = 'EN' }) =>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase text-zinc-500">{t.description}</label>
-                                <textarea name="description" value={formData.description} onChange={handleInputChange} rows={3} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
+                                <textarea required name="description" value={formData.description} onChange={handleInputChange} rows={3} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase text-zinc-500">{t.details}</label>
-                                <textarea name="details" value={formData.details} onChange={handleInputChange} rows={6} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
+                                <textarea required name="details" value={formData.details} onChange={handleInputChange} rows={6} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                             </div>
                         </div>
                     </div>
@@ -306,11 +307,11 @@ const AdminNewProject: React.FC<AdminNewProjectProps> = ({ language = 'EN' }) =>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase text-zinc-500">{t.description}</label>
-                                <textarea name="descriptionTr" value={formData.descriptionTr} onChange={handleInputChange} rows={3} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
+                                <textarea required name="descriptionTr" value={formData.descriptionTr} onChange={handleInputChange} rows={3} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase text-zinc-500">{t.details}</label>
-                                <textarea name="detailsTr" value={formData.detailsTr} onChange={handleInputChange} rows={6} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
+                                <textarea required name="detailsTr" value={formData.detailsTr} onChange={handleInputChange} rows={6} className="w-full bg-zinc-50 dark:bg-[#1A1D27] border border-zinc-200 dark:border-[#2A303C] p-3 rounded-lg text-sm text-zinc-900 dark:text-white" />
                             </div>
                         </div>
                     </div>

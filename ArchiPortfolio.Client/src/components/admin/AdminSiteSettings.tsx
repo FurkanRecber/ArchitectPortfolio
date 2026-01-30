@@ -220,9 +220,10 @@ const AdminSiteSettings: React.FC<AdminSiteSettingsProps> = ({ language = 'EN' }
             if (heroInputRef.current) heroInputRef.current.value = '';
             if (aboutInputRef.current) aboutInputRef.current.value = '';
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Kaydetme hatası:", error);
-            alert("Bir hata oluştu. Lütfen konsolu kontrol edin.");
+            const msg = error.message || "Bir hata oluştu. Lütfen konsolu kontrol edin.";
+            alert(msg);
         } finally {
             setSaving(false);
         }
